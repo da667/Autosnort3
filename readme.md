@@ -120,7 +120,7 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
 - Either modify or remove the file `/usr/local/etc/snort/virtual_labs_tweaks.lua`
 	- to remove the file,  run `rm -rf /usr/local/etc/snort/virtual_labs_tweaks.lua`
 		- You'll also need to remove the `include 'virtual_labs_tweaks.lua'` statement at the very end of the `/usr/local/etc/snort/snort.lua` file.
-	- If you want to keep the other configuration options while converting to passive mode operation, **in addition to the changes you made to snort3.service**, remove the following section from the file, using your favorite text editor:
+	- If you want to keep the other configuration options while converting to passive mode operation, **in addition to the changes you made to snort3.service file**, remove the following section from the `virtual_labs_tweaks.lua` file, using your favorite text editor:
 ``` 
 daq =
 {
