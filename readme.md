@@ -141,8 +141,6 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
     }
 }
 
-You can rename the current file by clicking the file name in the navigation bar or by clicking the **Rename** button in the file explorer.
-
 ## Licensing
 
 This script is released under the MIT license. There is no warranty for this software, implied or otherwise.
