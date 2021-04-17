@@ -22,7 +22,7 @@ This means that hypothetically (until I actually bother to test it myself) this 
  - [ ] 80GB of disk space
  - [ ] 3 network interfaces (one for management traffic, two for inline operation)
 
-These are the specs for the VM I used to test this script and build snort. As the name **Snort** implies, **this software is a hog**. And like with most software, the more resources has available, the better it will perform. In particular, Snort 3 is multi-threaded now, so multiple CPU cores are *extremely* valuable.
+These are the specs for the VM I used to test this script and build snort. As the name **Snort** implies, **this software is a hog**. And like with most software, the more resources it has available, the better it will perform. In particular, Snort 3 is multi-threaded now, so multiple CPU cores are *extremely* valuable.
 
 **OS Recommendations:** I used Ubuntu 20.04 to build and test this script, so its what I recommend using. If you want to use another Debian-based distro, be my guest. *However* that is entirely unsupported.
 
@@ -86,14 +86,17 @@ Autosnort3 automates all of the following tasks:
 		 - `-Q` (changes the DAQ operating mode from passive to inline, in addition to all of the custom DAQ configurations made in `virtual_labs_tweaks.lua`)
 
 ## Instructions for use
- 1. Clone this repo (`git clone https://github.com/da667/Autosnort3`)
- 2. cd into `Autosnort3/Ubuntu/AVATAR`
- 3. using your favorite text editor, open `full_autosnort.conf`
- 4. input the names of the network interfaces you'd like to bridge together for inline mode (if you want to use inline mode) in the `snort_iface_1=` (line 12) and `snort_iface_2=` (line 20) fields. For example, the script defaults to the interface names `eth1` and eth2.
- 5. copy your oinkcode to the `o_code=` field (line 32)
- 6. the script file, autosnort3-Ubuntu.sh needs to specifically be ran with the `bash` interpreter, and with `root` permissions.
-- If you downloaded the script as the `root` user, bash autosnort3-Ubuntu.sh will work
-- Alternatively, as the root user: `chmod u+x autosnort3-Ubuntu.sh && ./autosnort3-Ubuntu.sh`
+ 1. If you are running this script behind a proxy, make sure you run your export commands to set the http_proxy and https_proxy variables.
+ - e.g. `export http_proxy=172.16.1.1:3128`
+ - e.g. `export https_proxy=`
+ 2. Clone this repo (`git clone https://github.com/da667/Autosnort3`)
+ 3. cd into `Autosnort3/Ubuntu/AVATAR`
+ 4. using your favorite text editor, open `full_autosnort.conf`
+ 5. input the names of the network interfaces you'd like to bridge together for inline mode (if you want to use inline mode) in the `snort_iface_1=` (line 12) and `snort_iface_2=` (line 20) fields. For example, the script defaults to the interface names `eth1` and `eth2`.
+ 6. copy your oinkcode to the `o_code=` field (line 32)
+ 7. the script file, autosnort3-Ubuntu.sh needs to specifically be ran with the `bash` interpreter, and with `root` permissions.
+- If you downloaded the script as the `root` user, `bash autosnort3-Ubuntu.sh` will work
+- Alternatively, as the `root` user: `chmod u+x autosnort3-Ubuntu.sh && ./autosnort3-Ubuntu.sh`
 - or via `sudo`: `sudo bash autosnort3-Ubuntu.sh`, etc.
 
 That's all there is to it. Once the script starts running, you'll get status updates printed to the screen to let you know what tasks is currently being executed. If you want to make sure the script isn't hanging you can run `tail -f /var/log/autosnort3_install.log` to command output.
@@ -118,7 +121,8 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
 	- to remove the file,  run `rm -rf /usr/local/etc/snort/virtual_labs_tweaks.lua`
 		- You'll also need to remove the `include 'virtual_labs_tweaks.lua'` statement at the very end of the `/usr/local/etc/snort/snort.lua` file.
 	- If you want to keep the other configuration options while converting to passive mode operation, **in addition ot the changes you made to snort3.service**, remove the following section from the file, using your favorite text editor:
-> daq =
+``` 
+daq =
 {
     module_dirs =
     {
@@ -140,7 +144,7 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
         '[network interface1]:[network interface 2]',
     }
 }
-
+```
 ## Licensing
 
 This script is released under the MIT license. There is no warranty for this software, implied or otherwise.
