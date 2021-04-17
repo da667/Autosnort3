@@ -47,7 +47,7 @@ Autosnort3 automates all of the following tasks:
 	 - libdaq
  - Installs Snort 3 (also takes a **long** time to compile)
 	- Also installs the OpenAppID detectors, and OpenAppID listener plugin (via Snort3 extras)
-	- Creates the snort system user and group in order for the snort process to drop its privileges after startup
+	- Creates the `snort` system user and group in order for the snort process to drop its privileges after startup
  - Configures Snort 3 for operation through the included `virtual_labs_tweaks.lua` file, making the following configuration changes:
 	 - Enables the built-in/preprocessor rules
 	 - Uses the default variable settings
@@ -99,10 +99,10 @@ Autosnort3 automates all of the following tasks:
 - Alternatively, as the `root` user: `chmod u+x autosnort3-Ubuntu.sh && ./autosnort3-Ubuntu.sh`
 - or via `sudo`: `sudo bash autosnort3-Ubuntu.sh`, etc.
 
-That's all there is to it. Once the script starts running, you'll get status updates printed to the screen to let you know what tasks is currently being executed. If you want to make sure the script isn't hanging you can run `tail -f /var/log/autosnort3_install.log` to command output.
+That's all there is to it. Once the script starts running, you'll get status updates printed to the screen to let you know what tasks is currently being executed. If you want to make sure the script isn't hanging, you can run `tail -f /var/log/autosnort3_install.log` to view detailed command output.
 
 ## The script bombed on me. Wat do?
-Every tasks the script performs gets logged to `/var/log/autosnort3_install.log`. This will *hopefully* make debugging problems with the script much easier. Take a look and see if you can figure out what caused the installer script to vomit.
+Every task the script performs gets logged to `/var/log/autosnort3_install.log`. This will *hopefully* make debugging problems with the script much easier. Take a look and see if you can figure out what caused the installer script to vomit.
 
 ## I am not interested in inline mode operation at all. Wat do?
 Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.conf` aren't technically required. If you leave these fields blank, or their default values (assuming you don't have an `eth1` or `eth2` interface) the script will still finish. However, there are a couple of minor things you'll need to fix:
@@ -120,7 +120,7 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
 - Either modify or remove the file `/usr/local/etc/snort/virtual_labs_tweaks.lua`
 	- to remove the file,  run `rm -rf /usr/local/etc/snort/virtual_labs_tweaks.lua`
 		- You'll also need to remove the `include 'virtual_labs_tweaks.lua'` statement at the very end of the `/usr/local/etc/snort/snort.lua` file.
-	- If you want to keep the other configuration options while converting to passive mode operation, **in addition ot the changes you made to snort3.service**, remove the following section from the file, using your favorite text editor:
+	- If you want to keep the other configuration options while converting to passive mode operation, **in addition to the changes you made to snort3.service**, remove the following section from the file, using your favorite text editor:
 ``` 
 daq =
 {
