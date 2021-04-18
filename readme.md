@@ -29,7 +29,7 @@ These are the specs for the VM I used to test this script and build snort. As th
 **Other Recommendations:** 
 **This script *requires* an oinkcode to run.** If you don't know what that is, head to https://snort.org/users/sign_up and register an account. When you complete the registration process, log in and view your account information. That oinkcode needs to be copied to the `full_autosnort.conf` file
 
-**This script takes a significant period of time to run.** Hyperscan takes a long time to compile, as does snort 3 itself. If you're using the minimum system requirements, you'll need at least 1-2 hours for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
+**This script takes a significant period of time to run.** Hyperscan takes a long time to compile, as does snort 3 itself. If you're using the minimum system requirements, you'll need at least 45 minutes to 1.5 hours for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
 
 **This script defaults to assuming you want to run Snort3 in inline mode.** If you don't want that, I'll show you how to undo that in a little bit.
 
@@ -152,3 +152,8 @@ This script is released under the MIT license. There is no warranty for this sof
 ## Acknowledgements
 
 A big thanks to Noah for all of his hard work documenting the installation process on Ubuntu. I relied heavily on his work in order to create this lazy bunch of shell scripts.
+
+## Patch Notes
+-4/18/21
+	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
+	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros. 

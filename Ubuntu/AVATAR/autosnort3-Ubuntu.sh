@@ -672,6 +672,26 @@ chown -R snort:snort /var/log/snort &>> $logfile
 #and that the snort3.service file exists in the directory users executed the main script from (for us to copy/modify it)
 #We make a second copy of the snort3.service script, make some changes based on the full_autosnort.conf file, then move that copy to enable the service.
 
+#4/18/21: one slight difference between Ubuntu 20.04 and 18.04 is where the ip and sbin binaries live.
+#18.04: they lived in /sbin 20.04: they live in /usr/sbin.
+#this matters, because systemd needs to know the absolute path for any binaries or scripts you need to execute for a service file.
+#to make the snort3.service script compatible with both 18.04 and 20.04
+#we'll check for the existence of /usr/sbin/ip and /usr/sbin/ethtool
+#if they don't exist, we'll run ln -s `which ip` /usr/sbin/ip and ln -s `which ethtool` /usr/sbin/ethtool
+#this'll create symlinks so that snort3.service works on either 18.04 or 20.04 (and hypothetically, other distros)
+
+if [ ! -f /usr/sbin/ip ]; then
+	print_notification "creating symlink from `which ip` to /usr/sbin/ip.."
+	ln -s `which ip` /usr/sbin/ip
+	error_check 'symlink creation'
+fi
+
+if [ ! -f /usr/sbin/ethtool ]; then
+	print_notification "creating symlink from `which ethtool` to /usr/sbin/ethtool.."
+	ln -s `which ethtool` /usr/sbin/ethtool
+	error_check 'symlink creation'
+fi
+
 cd "$execdir" &>> $logfile
 
 if [ -f /etc/systemd/system/snort3.service ]; then
