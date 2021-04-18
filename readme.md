@@ -8,11 +8,10 @@ This script is primarily for students attempting to built Snort for my book, Bui
 I'll get into the details of what this script does in a little bit.
 
 ## Supported Operating Systems
-As of right now, Autosnort3 is only supported on Ubuntu 20.04 *but*, This script is 90% based on the work of Noah Dietrich, and his installation guide for Snort 3 on Ubuntu 18.04 *and* 20.04. A very special thank you and a link to Noah's work:
+As of right now, Autosnort3 is supported on Ubuntu 20.04 and 18.04. This script is 90% based on the work of Noah Dietrich, and his installation guide for Snort 3 on Ubuntu 18.04 *and* 20.04. A very special thank you and a link to Noah's work:
 
 https://snort.org/documents/snort-3-1-0-0-on-ubuntu-18-20
 
-This means that hypothetically (until I actually bother to test it myself) this script *should* run on Ubuntu 18.04.
 
 ## Prerequisites
 **System Resource Recommendations:** at a minimum, I recommend a system with at least:
@@ -24,7 +23,7 @@ This means that hypothetically (until I actually bother to test it myself) this 
 
 These are the specs for the VM I used to test this script and build snort. As the name **Snort** implies, **this software is a hog**. And like with most software, the more resources it has available, the better it will perform. In particular, Snort 3 is multi-threaded now, so multiple CPU cores are *extremely* valuable.
 
-**OS Recommendations:** I used Ubuntu 20.04 to build and test this script, so its what I recommend using. If you want to use another Debian-based distro, be my guest. *However* that is entirely unsupported.
+**OS Recommendations:** This script has been tested on Ubuntu 20.04 and 18.04. If you want to use another Debian-based distro, be my guest. *However* that is entirely unsupported and untested.
 
 **Other Recommendations:** 
 **This script *requires* an oinkcode to run.** If you don't know what that is, head to https://snort.org/users/sign_up and register an account. When you complete the registration process, log in and view your account information. That oinkcode needs to be copied to the `full_autosnort.conf` file
