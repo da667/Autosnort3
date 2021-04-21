@@ -157,7 +157,7 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	- This denotes a problem with Cisco's servers lacking the capacity to service the request. The only recommendation I can offer at this time is to  re-run the script in the hope that the servers aren't busy.
 - The script may occasionally fail to download the latest snortrules-snapshot via pulledpork.pl. Reviewing the `/var/log/autosnort3_install.log` may reveal pulledpork failed with Error 422: Unprocessable Entity.
 	- According to an old github issue, they tried to blame this on the user inputting an invalid oinkcode into the `pulledpork.conf` file, but I've experienced this problem with a perfectly valid oinkcode. Personally, I think the 422 errorcode also masks a 500 code on the server-side. The snortrules-snapshots are hosted on amazon via snort.org, just like the libdaq and snort3 tarballs.
-		- My recommendation is to check the `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `ocode=[40-character oinkcode here]`
+		- My recommendation is to check the `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `o_code=[40-character oinkcode here]`
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 
 - At some point, I'd like to be able to check the output from the wget/pulledpork.pl commands to maybe automatically retrying 3 times if a 500 or 422 code is encountered
