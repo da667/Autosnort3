@@ -150,18 +150,24 @@ This script is released under the MIT license. There is no warranty for this sof
 
 ## Acknowledgements
 
-A big thanks to Noah for all of his hard work documenting the installation process on Ubuntu. I relied heavily on his work in order to create this lazy bunch of shell scripts.
+A big thanks to Noah for all of his hard work documenting the installation process on Ubuntu. I relied heavily on his work in order to create this lazy of shell script.
 
 ## Known Problems
 - The script may occasionally fail to download libdaq or snort 3. Reviewing `/var/log/autosnort3_install.log` may reveal an HTTP 500 error.
 	- This denotes a problem with Cisco's servers lacking the capacity to service the request. The only recommendation I can offer at this time is to  re-run the script in the hope that the servers aren't busy.
 - The script may occasionally fail to download the latest snortrules-snapshot via pulledpork.pl. Reviewing the `/var/log/autosnort3_install.log` may reveal pulledpork failed with Error 422: Unprocessable Entity.
 	- According to an old github issue, they tried to blame this on the user inputting an invalid oinkcode into the `pulledpork.conf` file, but I've experienced this problem with a perfectly valid oinkcode. Personally, I think the 422 errorcode also masks a 500 code on the server-side. The snortrules-snapshots are hosted on amazon via snort.org, just like the libdaq and snort3 tarballs.
-		- My recommendation is to check the `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `o_code=[40-character oinkcode here]`
+		- My recommendation is to check `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `o_code=[40-character oinkcode here]`
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
-
-- At some point, I'd like to be able to check the output from the wget/pulledpork.pl commands to maybe automatically retrying 3 times if a 500 or 422 code is encountered
+		- At some point, I'd like to be able to check the output from the wget/pulledpork.pl commands to maybe automatically retrying 3 times if a 500 or 422 code is encountered
+		
 ## Patch Notes
+ - 4/29/21
+	- Cisco changed where they are hosting the snort3 tarballs. the URLs on snort.org now redirect to official github releases. I complained about this when I submitted a recently pulledpork bug, but didn't think they'd actually bother doing anything. This means that everything is consistently hosted on github. Good on them! But also means that they broke the HTML parsing in my script that handles finding the latest libdaq, snort3, and snort3-extras downloads and actually downloading them. I've since fixed this problem.
+	- Thanks to Raymond Kyte for reporting this issue.
+	- I found a really great function for bash scripts called retry https://gist.github.com/sj26/88e1c6584397bb7c13bd11108a579746
+	- Every single tarball download the script performs is now wrapped in retry and will attempt to wget/download the requested tarball at least 3 times before exiting the script entirely. Hopefully this will make the 500 server errors that snort.org has been throwing lately a little more bearable
+	- Added a retry function to pulledpork to try downloading the latest rules tarball 3 times, and if it fails, try downloading a snortrules tarball for the previous snort 3 release as a last resort. This should help to deal with pulledpork failing to download rules, hopefully.
  - 4/18/21
 	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
 	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros. 

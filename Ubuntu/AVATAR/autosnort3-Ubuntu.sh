@@ -40,6 +40,27 @@ function print_notification ()
 }
 ########################################
 
+#This is a nice retry function by sj26 on github.
+#link to original: https://gist.github.com/sj26/88e1c6584397bb7c13bd11108a579746
+# Retry a command up to a specific numer of times until it exits successfully
+function retry 
+{
+	local retries=$1
+	shift
+	local count=0
+	until "$@"; do
+		exit=$?
+		count=$(($count + 1))
+		if [ $count -lt $retries ]; then
+			print_notification "Retry $count/$retries exited $exit, retrying.."
+		else
+			print_error "Retry $count/$retries exited with error code $exit, no more retries left."
+		return $exit
+		fi
+	done
+	return 0
+}
+
 
 #Script does a lot of error checking. Decided to insert an error check function. 
 #If a task performed returns a non zero status code, something very likely went wrong.
@@ -180,17 +201,26 @@ cd /tmp &>> $logfile
 wget https://www.snort.org/downloads &>> $logfile
 error_check 'Download of snort.org downloads page'
 
-snort3_version_tarball=`grep snort3- downloads | egrep -v community | cut -d"/" -f4 | cut -d"\"" -f1`
-snort3_version_string=`echo $snort3_version_tarball | cut -d"-" -f2 | sed 's/.tar.gz//'`
-snort3_latest_url="https://snort.org/downloads/snortplus/$snort3_version_tarball"
+snort3_version_tarball=`grep snort3- downloads | egrep -v community | cut -d ">" -f2 | cut -d"<" -f1`
+snort3_version_string=`echo $snort3_version_tarball | cut -d"-" -f2`
+snort3_dirstring=`echo $snort3_version_tarball | sed 's/.tar.gz//'`
+snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_version_string"
 
-snort3_libdaq_tarball=`grep libdaq- downloads | cut -d"/" -f4 | cut -d"\"" -f1`
-snort3_libdaq_version_string=`echo $snort3_libdaq_tarball | cut -d"-" -f2 | sed 's/.tar.gz//'`
-snort3_libdaq_latest_url="https://snort.org/downloads/snortplus/$snort3_libdaq_tarball"
+snort3_libdaq_tarball=`grep libdaq- downloads | cut -d">" -f2 | cut -d "<" -f1`
+snort3_libdaq_version_string=`echo $snort3_libdaq_tarball | cut -d"-" -f2`
+snort3_libdaq_dirstring=`echo $snort3_libdaq_tarball | sed 's/.tar.gz//'`
+snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/v$snort3_libdaq_version_string"
 
-snort3_extras_tarball=`grep snort3_extra downloads | cut -d"/" -f4 | cut -d"\"" -f1`
-snort3_extras_version_string=`echo $snort3_extras_tarball | cut -d"-" -f2 | sed 's/.tar.gz//'`
-snort3_extras_latest_url="https://snort.org/downloads/snortplus/$snort3_extras_tarball"
+snort3_extras_tarball=`grep snort3_extra downloads | cut -d">" -f2 | cut -d "<" -f1`
+snort3_extras_version_string=`echo $snort3_extras_tarball | cut -d"-" -f2`
+snort3_extras_dirstring=`echo $snort3_extras_tarball | sed 's/.tar.gz//'`
+snort3_extras_latest_url="https://github.com/snort3/snort3_extra/archive/refs/tags/$snort3_extras_version_string"
+
+#Added this in to account for instances where the snortrules tarball has not yet caught up with the current release of snort3 on snort.org.
+#grep for snortrules-snapshot-3 for snort3 rule tarballs. pull out just the 4-digit version string, then add periods (.) between each of the numbers.
+#We use this number to set the "-S" flag for pulledpork.
+#This is an ancient, but necessary evil.
+pp_s_flag=`grep snortrules-snapshot-3 downloads | cut -d"-" -f3 | cut -d"." -f1 |sed -e 's/[[:digit:]]\{3\}/&./'| sed -e 's/[[:digit:]]\{2\}/&./' | sed -e 's/[[:digit:]]/&./' | head -1`
 
 rm -rf /tmp/downloads
 
@@ -311,12 +341,12 @@ error_check 'Installation of ragel-6.10'
 
 cd /usr/src &>> $logfile
 
-print_status "Downloading and decompressing $boost_latest_ver.."
-wget $boost_latest_url &>> $logfile
-error_check "Download of $boost_latest_ver"
+print_status "Downloading and decompressing boost-$boost_latest_ver.."
+retry 3 wget $boost_latest_url &>> $logfile
+error_check "Download of boost-$boost_latest_ver"
 
 tar -xzvf boost_$boost_dl_string.tar.gz &>> $logfile
-error_check "Untar of $boost_latest_ver"
+error_check "Untar of boost-$boost_latest_ver"
 
 ########################################
 #hyperscan is a little bit different
@@ -328,7 +358,7 @@ error_check "Untar of $boost_latest_ver"
 
 print_status "Downloading, compiling, and installing hyperscan $hyperscan_latest_version.."
 
-wget $hyperscan_latest_url -O hyperscan-v$hyperscan_latest_version.tar.gz &>> $logfile
+retry 3 wget $hyperscan_latest_url -O hyperscan-v$hyperscan_latest_version.tar.gz &>> $logfile
 error_check "Download of hyperscan $hyperscan_latest_version"
 
 dir_check hyperscan-v$hyperscan_latest_version
@@ -362,7 +392,7 @@ cd /usr/src &>> $logfile
 
 print_status "Downloading, compiling, and installing flatbuffers-$flatbuffers_latest_version.."
 
-wget $flatbuffers_latest_url -O flatbuffers-$flatbuffers_latest_version.tar.gz &>> $logfile
+retry 3 wget $flatbuffers_latest_url -O flatbuffers-$flatbuffers_latest_version.tar.gz &>> $logfile
 error_check "Download of flatbuffers-$flatbuffers_latest_version"
 
 
@@ -389,13 +419,13 @@ cd /usr/src &>> $logfile
 
 print_status "Downloading, compiling, and installing libdaq-$snort3_libdaq_version_string.."
 
-wget $snort3_libdaq_latest_url &>> $logfile
+retry 3 wget -O $snort3_libdaq_tarball $snort3_libdaq_latest_url &>> $logfile
 error_check 'Download of libdaq-$snort3_libdaq_version_string'
 
 tar -xzvf $snort3_libdaq_tarball &>> $logfile
 error_check "Untar of $snort3_libdaq_tarball"
 
-cd /usr/src/libdaq-$snort3_libdaq_version_string
+cd /usr/src/$snort3_libdaq_dirstring
 
 ./bootstrap &>> $logfile
 error_check "Bootstrap of libdaq-$snort3_libdaq_version_string"
@@ -416,12 +446,12 @@ cd /usr/src &>> $logfile
 
 print_status "Downloading, compiling, and installing snort3-$snort3_version_string.."
 
-wget $snort3_latest_url &>> $logfile
+retry 3 wget -O $snort3_version_tarball $snort3_latest_url &>> $logfile
 error_check "Download of snort3-$snort3_version_string"
 
 tar -xzvf $snort3_version_tarball &>> $logfile
 error_check "Untar of $snort3_version_tarball"
-cd /usr/src/snort3-$snort3_version_string &>> $logfile
+cd /usr/src/$snort3_dirstring
 
 ./configure_cmake.sh --prefix=/usr/local --enable-tcmalloc &>> $logfile
 error_check "Configure snort-$snort3_version_string"
@@ -454,7 +484,7 @@ ldconfig &>> $logfile
 cd /usr/src &>> $logfile
 
 print_status "Download and installing openappid detectors.."
-wget https://snort.org/downloads/openappid/snort-openappid.tar.gz &>> $logfile
+retry 3 wget https://snort.org/downloads/openappid/snort-openappid.tar.gz &>> $logfile
 error_check "Download of snort-openappid.tar.gz"
 
 tar -xzvf snort-openappid.tar.gz &>> $logfile
@@ -469,13 +499,13 @@ error_check "odp directory copy to /usr/local/lib"
 
 print_status "Downloading, compiling, and installing snort3-extra.."
 
-wget $snort3_extras_latest_url &>> $logfile
+retry 3 wget -O $snort3_extras_tarball $snort3_extras_latest_url &>> $logfile
 error_check "Download of $snort3_extras_tarball"
 
 tar -xzvf $snort3_extras_tarball &>> $logfile
 error_check "Untar of $snort3_extras_tarball"
 
-cd /usr/src/snort3_extra-$snort3_extras_version_string &>> $logfile
+cd /usr/src/$snort3_extras_dirstring &>> $logfile
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig &>> $logfile
 ./configure_cmake.sh --prefix=/usr/local &>> $logfile
 error_check "Configure snort3_extra-$snort3_extras_version_string"
@@ -616,9 +646,15 @@ print_notification "If the script CONTINUES to hang, consider checking network c
 #-l log successes or failures to /var/log/syslog
 #-P force processing of rules, even if no new rules were downloaded
 
-pulledpork.pl -W -vv -c /usr/local/etc/pulledpork/pulledpork.conf -l -P &>> $logfile
-error_check 'pulledpork.pl run'
-
+retry 3 pulledpork.pl -W -vv -c /usr/local/etc/pulledpork/pulledpork.conf -l -P &>> $logfile
+if [ $? -ne 0 ]; then
+	print_notification "Failed to download rules for snort-$snort3_version_string 3 times."
+	print_notification "Either Snort.org is having a really bad day (500 errors) or A rule tarball matching Snort3's current version is not yet present."
+	print_notification "Going to try 3 more times, setting the -S flag to $pp_s_flag.."
+	retry 3 pulledpork.pl -W -S $pp_s_flag -vv -c /usr/local/etc/pulledpork/pulledpork.conf -l -P &>> $logfile
+	error_check 'pulledpork.pl retry'
+fi
+	
 #If a crontab backup we've made already exists, restore it so we don't end up with duplicate crontab entries
 if [ -f /etc/crontab_bkup ]; then
 	print_notification "Found /etc/crontab_bkup. Restoring original crontab to prevent duplicate cron entries.."
