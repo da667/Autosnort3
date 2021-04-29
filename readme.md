@@ -50,7 +50,7 @@ Autosnort3 automates all of the following tasks:
  - Configures Snort 3 for operation through the included `virtual_labs_tweaks.lua` file, making the following configuration changes:
 	 - Enables the built-in/preprocessor rules
 	 - Uses the default variable settings
-	 - Enables the IP blacklist via the IP reputation function
+	 - ~~Enables the IP blacklist via the IP reputation function~~ (**temporarily broken, see the 4/29/21 patch notes below**)
 	 - Enables hyperscan as the preferred pattern matching engine
 	 - Enables JSON logging for snort alerts (logs to: `/var/log/snort/alert_json.txt`, configured to rollover after 1GB)
 	 - Enables JSON logging for the OpenAppID listener (logs to: `/var/log/snort/appid-output.log`)
@@ -159,7 +159,6 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	- According to an old github issue, they tried to blame this on the user inputting an invalid oinkcode into the `pulledpork.conf` file, but I've experienced this problem with a perfectly valid oinkcode. Personally, I think the 422 errorcode also masks a 500 code on the server-side. The snortrules-snapshots are hosted on amazon via snort.org, just like the libdaq and snort3 tarballs.
 		- My recommendation is to check `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `o_code=[40-character oinkcode here]`
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
-		- At some point, I'd like to be able to check the output from the wget/pulledpork.pl commands to maybe automatically retrying 3 times if a 500 or 422 code is encountered
 		
 ## Patch Notes
  - 4/29/21
@@ -168,6 +167,7 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	- I found a really great function for bash scripts called retry https://gist.github.com/sj26/88e1c6584397bb7c13bd11108a579746
 	- Every single tarball download the script performs is now wrapped in retry and will attempt to wget/download the requested tarball at least 3 times before exiting the script entirely. Hopefully this will make the 500 server errors that snort.org has been throwing lately a little more bearable
 	- Added a retry function to pulledpork to try downloading the latest rules tarball 3 times, and if it fails, try downloading a snortrules tarball for the previous snort 3 release as a last resort. This should help to deal with pulledpork failing to download rules, hopefully.
+	- Something is wrong with the reputation preprocessor. Either the `virtual_labs_tweaks.lua` file is configuring it incorrectly and I'm incompetent, or something is wrong with snort 3.1.4.0. Snort fails to start, and the only error in the log is that it can't file the file `reputation.blacklist` the only problem is that snort.lua, nor any of the files included in snort.lua define ANY file named reputation.blacklist. anywhere. Commenting out lines 50-53 in virtual_labs_tweaks.lua fixed this problem, however that means the IP reputation preprocessor is disabled until this problem can be fixed. Submitted a bug to snort3:  https://github.com/snort3/snort3/issues/178
  - 4/18/21
 	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
 	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros. 

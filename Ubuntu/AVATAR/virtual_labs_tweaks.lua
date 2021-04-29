@@ -4,6 +4,7 @@
 --enables hyperscan as the search engine for pattern matching
 --enables the DAQ for inline mode between snort_iface_1 and snort_iface_2 (defined in the full_autosnort.conf file)
 --enables the IP reputation blacklist
+--4/29:Reputation config is broken. Opened an issue on github because I think its a bug. Worked on 3.1.3.0, and suddenly stopped working on 3.1.4.0
 --enables JSON alerting for snort alerts
 --enables appid, the appid listener, and logging appid events.
 
@@ -47,10 +48,10 @@ daq =
     }
 }
 
-reputation =
-{
-    blacklist = '/usr/local/etc/lists/default.blocklist',
-}
+--reputation =
+--{
+--    blacklist = '/usr/local/etc/lists/default.blocklist',
+--}
 
 alert_json =
 {
