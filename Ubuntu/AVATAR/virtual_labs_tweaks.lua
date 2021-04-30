@@ -48,10 +48,10 @@ daq =
     }
 }
 
---reputation =
---{
---    blacklist = '/usr/local/etc/lists/default.blocklist',
---}
+reputation =
+{
+    blocklist = '/usr/local/etc/lists/default.blocklist',
+}
 
 alert_json =
 {
