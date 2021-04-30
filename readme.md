@@ -50,7 +50,7 @@ Autosnort3 automates all of the following tasks:
  - Configures Snort 3 for operation through the included `virtual_labs_tweaks.lua` file, making the following configuration changes:
 	 - Enables the built-in/preprocessor rules
 	 - Uses the default variable settings
-	 - ~~Enables the IP blacklist via the IP reputation function~~ (**temporarily broken, see the 4/29/21 patch notes below**)
+	 - Enables the IP blacklist via the IP reputation function
 	 - Enables hyperscan as the preferred pattern matching engine
 	 - Enables JSON logging for snort alerts (logs to: `/var/log/snort/alert_json.txt`, configured to rollover after 1GB)
 	 - Enables JSON logging for the OpenAppID listener (logs to: `/var/log/snort/appid-output.log`)
@@ -161,13 +161,17 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 4/30/21
+	- Fixed the problems I was having with the reputation preprocessor.
+	- https://github.com/snort3/snort3/issues/178
+	- This was a cut and dry case of RTFM. The proper terminology is now "blocklist = 'blah'" when using the reputation preprocessor. The reputation preprocessor has been re-enabled.
  - 4/29/21
 	- Cisco changed where they are hosting the snort3 tarballs. the URLs on snort.org now redirect to official github releases. I complained about this when I submitted a recently pulledpork bug, but didn't think they'd actually bother doing anything. This means that everything is consistently hosted on github. Good on them! But also means that they broke the HTML parsing in my script that handles finding the latest libdaq, snort3, and snort3-extras downloads and actually downloading them. I've since fixed this problem.
 	- Thanks to Raymond Kyte for reporting this issue.
 	- I found a really great function for bash scripts called retry https://gist.github.com/sj26/88e1c6584397bb7c13bd11108a579746
 	- Every single tarball download the script performs is now wrapped in retry and will attempt to wget/download the requested tarball at least 3 times before exiting the script entirely. Hopefully this will make the 500 server errors that snort.org has been throwing lately a little more bearable
 	- Added a retry function to pulledpork to try downloading the latest rules tarball 3 times, and if it fails, try downloading a snortrules tarball for the previous snort 3 release as a last resort. This should help to deal with pulledpork failing to download rules, hopefully.
-	- Something is wrong with the reputation preprocessor. Either the `virtual_labs_tweaks.lua` file is configuring it incorrectly and I'm incompetent, or something is wrong with snort 3.1.4.0. Snort fails to start, and the only error in the log is that it can't file the file `reputation.blacklist` the only problem is that snort.lua, nor any of the files included in snort.lua define ANY file named reputation.blacklist. anywhere. Commenting out lines 50-53 in virtual_labs_tweaks.lua fixed this problem, however that means the IP reputation preprocessor is disabled until this problem can be fixed. Submitted a bug to snort3:  https://github.com/snort3/snort3/issues/178
+	- ~~Something is wrong with the reputation preprocessor. Either the `virtual_labs_tweaks.lua` file is configuring it incorrectly and I'm incompetent, or something is wrong with snort 3.1.4.0. Snort fails to start, and the only error in the log is that it can't file the file `reputation.blacklist` the only problem is that snort.lua, nor any of the files included in snort.lua define ANY file named reputation.blacklist. anywhere. Commenting out lines 50-53 in virtual_labs_tweaks.lua fixed this problem, however that means the IP reputation preprocessor is disabled until this problem can be fixed. Submitted a bug to snort3:  https://github.com/snort3/snort3/issues/178~~ (**fixed - turns out the syntax changed**)
  - 4/18/21
 	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
 	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros. 
