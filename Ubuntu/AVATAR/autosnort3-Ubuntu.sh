@@ -184,7 +184,7 @@ pcre_latest=`curl --silent "https://ftp.pcre.org/pub/pcre/" | egrep -o "pcre-.\.
 
 boost_latest_ver=`curl --silent "https://www.boost.org/users/download/" | egrep "\-\ Current" | cut -d">" -f3 | cut -d" " -f1`
 boost_dl_string=`echo $boost_latest_ver | sed 's/\./_/g'`
-boost_latest_url="https://dl.bintray.com/boostorg/release/$boost_latest_ver/source/boost_$boost_dl_string.tar.gz"
+boost_latest_url="https://boostorg.jfrog.io/artifactory/main/release/$boost_latest_ver/source/boost_$boost_dl_string.tar.gz"
 
 hyperscan_latest_url=`curl --silent "https://api.github.com/repos/intel/hyperscan/releases/latest" | jq -r .tarball_url`
 hyperscan_latest_version=`echo $hyperscan_latest_url | cut -d"/" -f8 | sed 's/v//'`
