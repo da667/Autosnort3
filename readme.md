@@ -161,6 +161,8 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 6/4/21
+    - Discovered that the libdaq download URL has an extra "v" that should not be in the download URL. The fix was just removing the extra "v" from libdaq download URL on line 212.
  - 5/21/21
 	- The hosting provider for the C++ boost source code changed. The script has been updated to reflect this.
  - 4/30/21
