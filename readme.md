@@ -50,7 +50,7 @@ Autosnort3 automates all of the following tasks:
  - Configures Snort 3 for operation through the included `virtual_labs_tweaks.lua` file, making the following configuration changes:
 	 - Enables the built-in/preprocessor rules
 	 - Uses the default variable settings
-	 - Enables the IP blacklist via the IP reputation function
+	 - Enables the IP blocklist via the IP reputation function
 	 - Enables hyperscan as the preferred pattern matching engine
 	 - Enables JSON logging for snort alerts (logs to: `/var/log/snort/alert_json.txt`, configured to rollover after 1GB)
 	 - Enables JSON logging for the OpenAppID listener (logs to: `/var/log/snort/appid-output.log`)
