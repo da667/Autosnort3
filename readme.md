@@ -180,3 +180,10 @@ A big thanks to Noah for all of his hard work documenting the installation proce
  - 4/18/21
 	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
 	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros. 
+ - 11/28/21
+	- pcre.org, the maintainers of the pcre version 1 library and source code decided they no longer wish to maintain their FTP server. This resulted in the script failing to download the latest PCRE 1 sources to compile.
+	- autosnort3 requires the PCRE 1 sources specifically to compile hyperscan. Fortunately, they've decided to mirror the PCRE 1 source code over at sourceforge. 
+	- The good news is that sourceforge has a "/latest" URI I can use to download the latest PCRE 1 source package, instead of having to  try and parse HTML using command-line tools to determine the latest version of the library available for download.
+	- The bad news is that some people don't particularly like sourceforge. I'm not one of those people.
+	- I've heard that there are problems running this script on Ubuntu 21.04. My official response is that 21.04 isn't supposted by this script. Only Ubuntu Server 18.04 and 20.04 are officially supported at this time. My unofficial response is that, whatever is causing problems with 21.04 could potentially be a problem with the next LTS release (22.04), soooo I'm going to try and find a solution.
+	

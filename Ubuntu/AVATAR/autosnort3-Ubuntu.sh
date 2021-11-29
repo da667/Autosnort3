@@ -161,9 +161,9 @@ fi
 #Installing pre-requisites
 #We begin by installing the software packages and libraries available in the Ubuntu repos.
 
-print_status "Installing base packages: build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq.."
+print_status "Installing base packages: build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq.."
 	
-declare -a packages=( build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq );
+declare -a packages=( build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq );
 	
 install_packages ${packages[@]}
 
@@ -179,8 +179,6 @@ safec_ver=`echo $safec_latest_url | cut -d"/" -f9 | cut -d"." -f1`
 
 gperftools_latest_url=`curl --silent "https://api.github.com/repos/gperftools/gperftools/releases/latest" | jq -r '.assets[0].browser_download_url'`
 gperftools_ver=`echo $gperftools_latest_url | cut -d"/" -f9 | sed 's/.tar.gz//'`
-
-pcre_latest=`curl --silent "https://ftp.pcre.org/pub/pcre/" | egrep -o "pcre-.\...\.tar\.gz" | cut -d"." -f1,2 | sort -ur | head -1`
 
 boost_latest_ver=`curl --silent "https://www.boost.org/users/download/" | egrep "\-\ Current" | cut -d">" -f3 | cut -d" " -f1`
 boost_dl_string=`echo $boost_latest_ver | sed 's/\./_/g'`
@@ -255,30 +253,35 @@ make install &>> $logfile
 error_check 'Installation of safec libraries'
 
 ########################################
-#Noah recommends pulling the lastest PCRE libraries directly from their FTP server.
-#I hate to have to do this, but because pcre.org doesn't have a "/latest" download link
-#I have to download the index.html, and parse it to find the latest pcre build.
-
-print_status "Downloading, compiling and installing $pcre_latest.."
+#Noah recommends pulling the lastest pcre libraries directly from their FTP server.
+#unfortunately, pcre.org has decided they no longer wish to maintain their FTP server.
+#It seems as though they host all of the PCRE 1 builds on sourceforge now
+#good news: there is a /latest link I can use to just download the latest PCRE library without ugly html parsing with command-line tools.
+#bad news: Some people don't care for sourceforge. I'm not one of those people, however.
+#So we download the latest zip file from sourceforge, unzip it, determine the version of pcre 1 libraries being installed, and use that to figure out what directory to jump into to compile this mess.
+print_status "Downloading, compiling and installing the latest PCRE 1 libraries.."
 
 cd /usr/src
 
-wget https://ftp.pcre.org/pub/pcre/$pcre_latest.tar.gz &>> $logfile
-error_check "Download of $pcre_latest"
+wget https://sourceforge.net/projects/pcre/files/latest/download -O pcre_latest.zip &>> $logfile
+error_check "Download of PCRE 1 libraries"
 
-tar -xzvf $pcre_latest.tar.gz &>> $logfile
-error_check "Untar of $pcre_latest.tar.gz"
+unzip pcre_latest.zip &>> $logfile
+error_check "unzip of pcre_latest.zip"
 
-cd /usr/src/`echo $pcre_latest|cut -d"." -f1,2` &>> $logfile
+pcre_ver=`ls -d pcre-*`
+cd $pcre_ver &>> $logfile
+
+
 
 ./configure &>> $logfile
-error_check "Configure $pcre_latest"
+error_check "Configure $pcre_ver"
 
 make &>> $logfile
-error_check "Make $pcre_latest"
+error_check "Make $pcre_ver"
 
 make install &>> $logfile
-error_check "Installation of $pcre_latest"
+error_check "Installation of $pcre_ver"
 
 ########################################
 #Download, compile and install gperftools
