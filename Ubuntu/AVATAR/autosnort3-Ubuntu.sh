@@ -266,7 +266,7 @@ cd /usr/src
 wget https://sourceforge.net/projects/pcre/files/latest/download -O pcre_latest.zip &>> $logfile
 error_check "Download of PCRE 1 libraries"
 
-unzip pcre_latest.zip &>> $logfile
+unzip -o pcre_latest.zip &>> $logfile
 error_check "unzip of pcre_latest.zip"
 
 pcre_ver=`ls -d pcre-*`
@@ -377,14 +377,25 @@ cd /usr/src/hyperscan-v$hyperscan_latest_version/hyperscan-$hyperscan_latest_ver
 print_notification "cmake of hyperscan in progress.."
 print_notification "Please note that this will take a significant period of time to complete."
 print_notification "If you'd like to view the progress, open a new terminal session and run: tail -f /var/log/autosnort3_install.log"
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=/usr/src/boost_$boost_dl_string /usr/src/hyperscan-v$hyperscan_latest_version &>> $logfile
+cmake -DFAT_RUNTIME=OFF -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=/usr/src/boost_$boost_dl_string /usr/src/hyperscan-v$hyperscan_latest_version &>> $logfile
 
+#Had a number of users state that hyperscan fails to compile on Ubuntu 21.10. This has become enough of a problem that I've opened a github issue about it:
+#https://github.com/intel/hyperscan/issues/344
+#Fortunately, Canonical provides the libhyperscan package via apt repos.
+#I don't know if there is an effective difference from compiling from source vs. using the repo package...
+#But I /do/ know that downloading the libhyperscan-devel package fulfilled the hyperscan requirement for snort3 to successfully compile WITH hyperscan support.
+#So until the root cause of the failure to compile from source is found, this is the work-around: try to compile, and if it fails, fall back to the software package.
 
 make &>> $logfile
-error_check "Make of hyperscan $hyperscan_latest_version"
-
-make install &>> $logfile
-error_check "Installation of hyperscan $hyperscan_latest_version"
+if [ $? -eq 0 ]; then
+	print_good "Make of hyperscan-v$hyperscan_latest_version completed successfully."
+	make install &>> $logfile
+	error_check "Installation of hyperscan $hyperscan_latest_version"
+else
+	print_notification "Hyperscan failed to compile. Attemping to install libhyperscan-dev to satisfy requirements instead.."
+	declare -a packages=( libhyperscan-dev )
+	install_packages ${packages[@]}
+fi
 
 ########################################
 #need to install flatbuffers

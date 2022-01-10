@@ -10,7 +10,7 @@ I'll get into the details of what this script does in a little bit.
 ## Supported Operating Systems
 As of right now, Autosnort3 is supported on Ubuntu 20.04 and 18.04. This script is 90% based on the work of Noah Dietrich, and his installation guide for Snort 3 on Ubuntu 18.04 *and* 20.04. A very special thank you and a link to Noah's work:
 
-https://snort.org/documents/snort-3-1-0-0-on-ubuntu-18-20
+https://snort.org/documents/snort-3-1-17-0-on-ubuntu-18-20
 
 
 ## Prerequisites
@@ -161,6 +161,17 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 1/6/22
+	- Happy new year! Several users of Autosnort3 have reported that the script fails to run on Ubuntu Server 21.10. While officially the script is only supported on Ubuntu 18.04 and 20.04, I'm a firm believer in situational awareness. That is, if there's a problem with the interim "look at the new technology we'll be jamming into future Ubuntu releases", then there's a pretty good chance these problems will make it into the next LTS release if they aren't fixed or worked around.
+	- This issue centers around Intel's Hyperscan library, a pretty integral part of Snort3. For some reason, it fails to compile on 21.10, where it was perfectly fine in Ubuntu 20.04. Unfortunately, fixing this problem is beyond my feeble brain, so I've opened in issue on github for the intel hyperscan project.
+	- https://github.com/intel/hyperscan/issues/344
+	- I have no idea what the root cause is, or what the resolution is. In the interim however, I've discovered that Canonical provides a libhyperscan software package that comes pre-compiled. I don't know why Noah Dietrich specifically recommends compiling hyperscan, but I DO know that by using apt to install libhyperscan-devel, Snort3 WILL compile and `Snort -V` confirms that it was compiled against hyperscan.
+	- Sooo I just created a small if/then that detects if the make command failed to run and if it does, falls back and attempts to install the libhyperscan-devel package via apt-get. Yeah, its grody, but it works.
+	- Noticed the `unzip` command, used to decompress the pcre source code, defaults to prompting to overwriting pre-existing files and folders. This is probably good design, but not in a script that is supposed to be completely hands-free. If users have ran the autosnort script, and it fails after having unzipped the PCRE sources from a previous run, the script stops, waiting for user input as to whether or not it should overwrite the unzipped PCRE source directory. To fix this, Changed line 269 to run `zip -o` (blindly overwrite files without prompting).
+	- Fixed the dead link to Noah's documentation on how to build Snort on Ubuntu 18/20.04. The link above now points to a newer version of the document. 
+	- Unfortunately, this link is NOT on the snort.org site as of 1/6, and hasn't been there since Snort 3.17 was released in November. 
+	- What's even better is that the previous document is NOT available via the internet archive, because it wasn't able to crawl the AWS link to where the PDF is actually hosted. 
+	- Not sure if  this is a hosting configuration option that Cisco dreamt up, or if this is a default configuration for AWS hosted content, but I can't say I like it. Anyhoo I informed that powers that be™ about the lack of a link to the updated documentation, and allegedly it will be fixed soon™.
  - 11/28/21
 	- pcre.org, the maintainers of the pcre version 1 library and source code decided they no longer wish to maintain their FTP server. This resulted in the script failing to download the latest PCRE 1 sources to compile.
 	- autosnort3 requires the PCRE 1 sources specifically to compile hyperscan. Fortunately, they've decided to mirror the PCRE 1 source code over at sourceforge. 
