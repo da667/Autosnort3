@@ -110,7 +110,7 @@ Fun fact: the `snort_iface_1` and `snort_iface_2` options in `full_autosnort.con
 		- `systemctl disable snort3.service`
 		- `rm -rf /etc/systemd/system/snort3.service`
 	- To modify the file for passive operation, perform the following actions:
-		- To stop inline mode operation, the `-Q` option will need to be removed from the snort command (line 17). 
+		- To stop inline mode operation, the `-Q` option will need to be removed from the snort command (line 17 in the `snort3.service` file). 
 		- Add the `-i [interface_name]` command line argument to line 17 define the network interface you'd like to use for IDS mode operation.
 		- On lines 13 and 15, make sure you add the interface name you defined on line 17.
 			- e.g. `/usr/sbin/ip link set up promisc on arp off multicast off dev [interface name]`
