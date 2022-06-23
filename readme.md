@@ -161,6 +161,10 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 6/23/22
+	- A user reported a problem with the openappid listener not operating properly. Wasn't even creating a log file. After going through some troubleshooting, I was able to reproduce the issue. It turns out this is because new versions of the openappid listener in the snort_extras tarball are installed to the `snort` directory, instead of `snort_extras` like it use to be. Yay for arbitrary directory changes! The `snort3.service` file has been updated to reflect this change, resolving the problem. Thanks to @Smicker_RS for reporting this problem.
+ - 3/23/22
+	- The maintainer for the safec github has changed the name of their tarball, and have also changed how they are listed on the releases page. Fixed an issue reported by Vito Ferrara where safec was failing to download due to this change in file listing and filename. The script should properly parse the github releases page, download the right package, and automatically unpack it like normal. Thank you!
  - 1/6/22
 	- Happy new year! Several users of Autosnort3 have reported that the script fails to run on Ubuntu Server 21.10. While officially the script is only supported on Ubuntu 18.04 and 20.04, I'm a firm believer in situational awareness. That is, if there's a problem with the interim "look at the new technology we'll be jamming into future Ubuntu releases", then there's a pretty good chance these problems will make it into the next LTS release if they aren't fixed or worked around.
 	- This issue centers around Intel's Hyperscan library, a pretty integral part of Snort3. For some reason, it fails to compile on 21.10, where it was perfectly fine in Ubuntu 20.04. Unfortunately, fixing this problem is beyond my feeble brain, so I've opened in issue on github for the intel hyperscan project.
@@ -197,5 +201,3 @@ A big thanks to Noah for all of his hard work documenting the installation proce
  - 4/18/21
 	- Added support for Ubuntu 18.04 by adding a small check to see if `/usr/sbin/ip` and `/usr/sbin/ethtool` exist. The `ip` command should already be on most modern Linux distros, and this script installs `ethtool`.  If they don't exist in `/usr/sbin`, create a symlink using the `which` command to figure out where the binaries actually are. 
 	- The reason we have to do this is because systemd service files require absolute paths to any binaries or scripts you call. This is an easier work-around then having multiple `snort3.service` files for different linux distros.
- - 3/23/22
-	- The maintainer for the safec github has changed the name of their tarball, and have also changed how they are listed on the releases page. Fixed an issue reported by Vito Ferrara where safec was failing to download due to this change in file listing and filename. The script should properly parse the github releases page, download the right package, and automatically unpack it like normal. Thank you!
