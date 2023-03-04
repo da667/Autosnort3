@@ -207,7 +207,7 @@ snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_ve
 snort3_libdaq_tarball=`grep libdaq- downloads | cut -d">" -f2 | cut -d "<" -f1`
 snort3_libdaq_version_string=`echo $snort3_libdaq_tarball | cut -d"-" -f2`
 snort3_libdaq_dirstring=`echo $snort3_libdaq_tarball | sed 's/.tar.gz//' | sed 's/v//'`
-snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/$snort3_libdaq_version_string"
+snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/v$snort3_libdaq_version_string"
 
 snort3_extras_tarball=`grep snort3_extra downloads | cut -d">" -f2 | cut -d "<" -f1`
 snort3_extras_version_string=`echo $snort3_extras_tarball | cut -d"-" -f2`
