@@ -161,6 +161,13 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 5/20/23
+    - Users are reporting an issue with compiling the flatbuffers library. If you get an error stating that the `test_assert.h` file does not exist, this is a known bug with flatbuffers. 
+	- To make a long story short: there are some assumptions made as to where flatbuffers is being built, and that its not looking in the correct directory for the `test_assert.h` header file during compilation (https://github.com/google/flatbuffers/issues/7947). Two options to fix this problem:
+		- Wait for google to push a new release of flatbuffers in which the fix is rolled in. By looking at their release cadence, they seem to push a new release of flat buffers bi-weekly or monthly. Its been about two weeks since this issue was found, so maybe they'll be doing a new release soon? Or... 
+		- Run `autosnort3-Ubuntu.sh` as normal, and wait for flatbuffers to fail to compile. Afterwards, run the command:
+	 `cp /usr/src/flatbuffers-[current_version]/tests/test_assert.h /usr/src/flatbuffers-[current_version]/flatbuffers-build/tests/` then run the `autosnort3-Ubuntu.sh` script again, as normal. With most of the other libraries and prereqs already compiled and in place, re-running the script up to this point will be much faster.
+	- I'm getting a feeling of de ja vu. In troubleshooting the problem above, I noticed that libdaq was failing to download. I had to make a slight change to the URL used to pull down libdaq tarballs, but hopefully it should be working as intended now
  - 6/23/22
 	- A user reported a problem with the openappid listener not operating properly. Wasn't even creating a log file. After going through some troubleshooting, I was able to reproduce the issue. It turns out this is because new versions of the openappid listener in the snort_extras tarball are installed to the `snort` directory, instead of `snort_extras` like it use to be. Yay for arbitrary directory changes! The `snort3.service` file has been updated to reflect this change, resolving the problem. Thanks to @Smicker_RS for reporting this problem.
  - 3/23/22
