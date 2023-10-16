@@ -161,6 +161,13 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 10/16/23
+	- Hey hey, Analysts. Its been a hot minute. 
+	- A couple of users reported problems with the script failing to pull down the Snort3 source tarball. Due to them changing the snort.org page ever-so-slightly once more. Of course, my ability to parse HTML is impeccable. I mean, its not like Cisco doesn't have the resources to make a snort3/latest.tar.gz URI or anything. No, that would wouldn't be helpful _at_ _all_.
+	- Made a couple of slight changes to the precompiled packages the script acquires. Some of these are just to ensure that certain packages Snort3 needs are present, while others are to greatly reduce the amount of time it takes to actually it actually takes to install Snort 3.
+	- No more manually compiling Intel's hyperscan libraries. We just download `libhyperscan-dev`. I'm sick of wasting your time, and mine.
+	- Made a slight change that will hopefully reduce the amount of time snort needs to compile slightly. I discovered that `$(nproc)` is a thing, so we can compile snort3 with `make -j $(nproc)` and have it auto-adjust for the number of cores available on your system. If all you have is a single core VM, you won't notice any changes, but if you have more than one core available... it'll help push things along much faster.
+		- Sure, this will make your laptop fans start _*REEEEEEEEEEEEE*_'ing for a minute, but better than waiting 20-30 minutes for Snort to compile.
  - 5/20/23
     - Users are reporting an issue with compiling the flatbuffers library. If you get an error stating that the `test_assert.h` file does not exist, this is a known bug with flatbuffers. 
 	- To make a long story short: there are some assumptions made as to where flatbuffers is being built, and that its not looking in the correct directory for the `test_assert.h` header file during compilation (https://github.com/google/flatbuffers/issues/7947). Two options to fix this problem:

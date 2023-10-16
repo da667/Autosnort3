@@ -150,10 +150,10 @@ error_check 'System updates'
 
 print_status "OS Version Check.."
 release=`lsb_release -r|awk '{print $2}'`
-if [[ $release == "18."* || "20."* ]]; then
-	print_good "OS is Ubuntu. Good to go."
+if [[ $release == "20."* || "22."* ]]; then
+	print_good "OS is Ubuntu 20.x+. Good to go."
 else
-    print_notification "This is not Ubuntu 18.x or 20.x, this script has NOT been tested on other platforms."
+    print_notification "This is not Ubuntu 20.x, this script has NOT been tested on other platforms."
 	print_notification "You continue at your own risk!(Please report your successes or failures!)"
 fi
 
@@ -161,9 +161,9 @@ fi
 #Installing pre-requisites
 #We begin by installing the software packages and libraries available in the Ubuntu repos.
 
-print_status "Installing base packages: build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq.."
+print_status "Installing base packages: build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev libpcre3 libpcre3-dbg libpcre3-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libhyperscan-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq xz-utils.."
 	
-declare -a packages=( build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq );
+declare -a packages=( build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev libpcre3 libpcre3-dbg libpcre3-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libhyperscan-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq xz-utils );
 	
 install_packages ${packages[@]}
 
@@ -180,13 +180,6 @@ safec_ver=`echo $safec_latest_url | cut -d"/" -f9 | sed -e 's/.tar.bz2//'`
 gperftools_latest_url=`curl --silent "https://api.github.com/repos/gperftools/gperftools/releases/latest" | jq -r '.assets[0].browser_download_url'`
 gperftools_ver=`echo $gperftools_latest_url | cut -d"/" -f9 | sed 's/.tar.gz//'`
 
-boost_latest_ver=`curl --silent "https://www.boost.org/users/download/" | egrep "\-\ Current" | cut -d">" -f3 | cut -d" " -f1`
-boost_dl_string=`echo $boost_latest_ver | sed 's/\./_/g'`
-boost_latest_url="https://boostorg.jfrog.io/artifactory/main/release/$boost_latest_ver/source/boost_$boost_dl_string.tar.gz"
-
-hyperscan_latest_url=`curl --silent "https://api.github.com/repos/intel/hyperscan/releases/latest" | jq -r .tarball_url`
-hyperscan_latest_version=`echo $hyperscan_latest_url | cut -d"/" -f8 | sed 's/v//'`
-
 flatbuffers_latest_url=`curl --silent "https://api.github.com/repos/google/flatbuffers/releases/latest" | jq -r .tarball_url`
 flatbuffers_latest_version=`echo $flatbuffers_latest_url | cut -d"/" -f8 | sed 's/v//'`
 
@@ -199,7 +192,7 @@ cd /tmp &>> $logfile
 wget https://www.snort.org/downloads &>> $logfile
 error_check 'Download of snort.org downloads page'
 
-snort3_version_tarball=`grep snort3- downloads | egrep -v community | cut -d ">" -f2 | cut -d"<" -f1`
+snort3_version_tarball=`grep snort3- downloads | egrep -v "community|Snort" | cut -d ">" -f2 | cut -d"<" -f1`
 snort3_version_string=`echo $snort3_version_tarball | cut -d"-" -f2`
 snort3_dirstring=`echo $snort3_version_tarball | sed 's/.tar.gz//'`
 snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_version_string"
@@ -253,37 +246,6 @@ make install &>> $logfile
 error_check 'Installation of safec libraries'
 
 ########################################
-#Noah recommends pulling the lastest pcre libraries directly from their FTP server.
-#unfortunately, pcre.org has decided they no longer wish to maintain their FTP server.
-#It seems as though they host all of the PCRE 1 builds on sourceforge now
-#good news: there is a /latest link I can use to just download the latest PCRE library without ugly html parsing with command-line tools.
-#bad news: Some people don't care for sourceforge. I'm not one of those people, however.
-#So we download the latest zip file from sourceforge, unzip it, determine the version of pcre 1 libraries being installed, and use that to figure out what directory to jump into to compile this mess.
-print_status "Downloading, compiling and installing the latest PCRE 1 libraries.."
-
-cd /usr/src
-
-wget https://sourceforge.net/projects/pcre/files/latest/download -O pcre_latest.zip &>> $logfile
-error_check "Download of PCRE 1 libraries"
-
-unzip -o pcre_latest.zip &>> $logfile
-error_check "unzip of pcre_latest.zip"
-
-pcre_ver=`ls -d pcre-*`
-cd $pcre_ver &>> $logfile
-
-
-
-./configure &>> $logfile
-error_check "Configure $pcre_ver"
-
-make &>> $logfile
-error_check "Make $pcre_ver"
-
-make install &>> $logfile
-error_check "Installation of $pcre_ver"
-
-########################################
 #Download, compile and install gperftools
 
 print_status "Downloading, compiling, and installing $gperftools_ver.."
@@ -306,96 +268,6 @@ error_check "Make $gperftools_ver"
 
 make install &>> $logfile
 error_check "Installation of $gperftools_ver"
-
-########################################
-#Noah says ragel is recommended for snort3
-#I'm going to do something stupid and goin out on a limb:
-#noah's guide calls out ragel 6.10 specifically as the version he downloads/compiles
-#version 7+ requires colm to compile (another project by the developer of ragel)
-#colm is never mentioned as a pre-requisite for Noah's installation guide.
-#soo... I'm going to specifically download ragel version 6.10 here.
-#ragel 6.x hasn't been updated since 2017.
-
-print_status "Downloading, compiling, and installing ragel 6.10.."
-
-cd /usr/src &>> $logfile
-
-wget https://www.colm.net/files/ragel/ragel-6.10.tar.gz &>> $logfile
-error_check 'Download of ragel-6.10'
-
-tar -xzvf ragel-6.10.tar.gz &>> $logfile
-error_check 'Untar of ragel-6.10'
-
-cd /usr/src/ragel-6.10 &>> $logfile
-
-./configure &>> $logfile
-error_check 'Configure ragel-6.10'
-
-make &>> $logfile
-error_check 'Make of ragel-6.10'
-
-make install &>> $logfile
-error_check 'Installation of ragel-6.10'
-
-########################################
-#I absolutely HATE what I had to do to pull the current release from the C++ boost downloads page
-#May god forgive me for the mess I made. If they change the format of the downloads page even slightly, this script will break.
-#I guess the same can be said for the api requests to github to get the tarball download links. its all HTML parsing in the end.
-
-cd /usr/src &>> $logfile
-
-print_status "Downloading and decompressing boost-$boost_latest_ver.."
-retry 3 wget $boost_latest_url &>> $logfile
-error_check "Download of boost-$boost_latest_ver"
-
-tar -xzvf boost_$boost_dl_string.tar.gz &>> $logfile
-error_check "Untar of boost-$boost_latest_ver"
-
-########################################
-#hyperscan is a little bit different
-#not unlike safec, they also make the untar directory ugly as sin, putting the build release version in the directory name, making it hard to future-proof
-#for example, hyperscan v5.4.0 untars to: intel-hyperscan-64a995b
-#so we're using the same trick where I will be making a directory named after the hyperscan version number, untarring the contents there, and changing the dir structure a bit.
-#it needs to be compiled in a specific way, and it needs to know where the c++ boost source files are located.
-#the compile time was nearly 30 minutes on a single core, 4GB of RAM VM so... plan accordingly.
-
-print_status "Downloading, compiling, and installing hyperscan $hyperscan_latest_version.."
-
-retry 3 wget $hyperscan_latest_url -O hyperscan-v$hyperscan_latest_version.tar.gz &>> $logfile
-error_check "Download of hyperscan $hyperscan_latest_version"
-
-dir_check hyperscan-v$hyperscan_latest_version
-tar -xzvf hyperscan-v$hyperscan_latest_version.tar.gz -C hyperscan-v$hyperscan_latest_version  --strip-components=1 &>> $logfile
-error_check "Untar of hyperscan $hyperscan_latest_version"
-
-cd /usr/src/hyperscan-v$hyperscan_latest_version &>> $logfile
-dir_check hyperscan-$hyperscan_latest_version-build
-cd /usr/src/hyperscan-v$hyperscan_latest_version/hyperscan-$hyperscan_latest_version-build &>> $logfile
-
-#cmkae is vile and if there are multiple built targets echo $? doesn't work to check to make sure that cmake actually worked.
-#this is okay, because if cmake didn't work, make/make install will definitely fail that's why there's not an error_check statement here.
-print_notification "cmake of hyperscan in progress.."
-print_notification "Please note that this will take a significant period of time to complete."
-print_notification "If you'd like to view the progress, open a new terminal session and run: tail -f /var/log/autosnort3_install.log"
-cmake -DFAT_RUNTIME=OFF -DCMAKE_INSTALL_PREFIX=/usr/local -DBOOST_ROOT=/usr/src/boost_$boost_dl_string /usr/src/hyperscan-v$hyperscan_latest_version &>> $logfile
-
-#Had a number of users state that hyperscan fails to compile on Ubuntu 21.10. This has become enough of a problem that I've opened a github issue about it:
-#https://github.com/intel/hyperscan/issues/344
-#Fortunately, Canonical provides the libhyperscan package via apt repos.
-#I don't know if there is an effective difference from compiling from source vs. using the repo package...
-#But I /do/ know that downloading the libhyperscan-devel package fulfilled the hyperscan requirement for snort3 to successfully compile WITH hyperscan support.
-#So until the root cause of the failure to compile from source is found, this is the work-around: try to compile, and if it fails, fall back to the software package.
-
-make &>> $logfile
-if [ $? -eq 0 ]; then
-	print_good "Make of hyperscan-v$hyperscan_latest_version completed successfully."
-	make install &>> $logfile
-	error_check "Installation of hyperscan $hyperscan_latest_version"
-else
-	print_notification "Hyperscan failed to compile. Attemping to install libhyperscan-dev to satisfy requirements instead.."
-	declare -a packages=( libhyperscan-dev )
-	install_packages ${packages[@]}
-fi
 
 ########################################
 #need to install flatbuffers
@@ -434,7 +306,7 @@ cd /usr/src &>> $logfile
 print_status "Downloading, compiling, and installing libdaq-$snort3_libdaq_version_string.."
 
 retry 3 wget -O $snort3_libdaq_tarball $snort3_libdaq_latest_url &>> $logfile
-error_check 'Download of libdaq-$snort3_libdaq_version_string'
+error_check "Download of libdaq-$snort3_libdaq_version_string"
 
 tar -xzvf $snort3_libdaq_tarball &>> $logfile
 error_check "Untar of $snort3_libdaq_tarball"
@@ -472,10 +344,10 @@ error_check "Configure snort-$snort3_version_string"
 
 cd build &>> $logfile
 print_notification "Compiling snort-$snort3_version_string.."
-print_notification "Once again, this may take some time to complete."
+print_notification "This may take some time to complete."
 print_notification "Users can view progress in another terminal window with the command: tail -f /var/log/autosnort3_install.log."
 
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check "Make snort-$snort3_version_string"
 
 make install &>> $logfile
