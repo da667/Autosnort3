@@ -189,20 +189,20 @@ cd /tmp &>> $logfile
 wget https://www.snort.org/downloads &>> $logfile
 error_check 'Download of snort.org downloads page'
 
-snort3_version_string=`curl https://api.github.com/repos/snort3/snort3/releases/latest | jq -r .tag_name`
-snort3_version_tarball=`echo snort3-$snort3_version_string.tar.gz`
-snort3_dirstring=`echo $snort3_version_tarball | sed 's/.tar.gz//'`
+snort3_version_string=`curl -fsSL https://api.github.com/repos/snort3/snort3/releases/latest | jq -r .tag_name`
+snort3_version_tarball=snort3-$snort3_version_string.tar.gz
+snort3_dirstring=snort3-$snort3_version_string
 snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_version_string.tar.gz"
 
-snort3_libdaq_version_string=`curl https://api.github.com/repos/snort3/libdaq/releases/latest | jq -r .tag_name`
-snort3_libdaq_tarball=`echo libdaq-$snort3_libdaq_version_string.tar.gz`
-snort3_libdaq_dirstring=`echo $snort3_libdaq_tarball | sed 's/.tar.gz//' | sed 's/v//'`
+snort3_libdaq_version_string=`curl -fsSL https://api.github.com/repos/snort3/libdaq/releases/latest | jq -r .tag_name`
+snort3_libdaq_tarball=libdaq-$snort3_libdaq_version_string.tar.gz
+snort3_libdaq_dirstring=`echo libdaq-$snort3_libdaq_version_string | sed 's/v//'`
 snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/$snort3_libdaq_version_string.tar.gz"
 
 #curses to the snort3 team for failing to use releases on the snort3_extra repo. We have to do a little extra work here to pull releases with actual version strings in them (the grep with the PCRE is to ensure a 4-digit version string in the .name field is returned), then we assume that the API is going to show us the latest 4-digit version string first (at least it did when I tested it) and we use the head command to pull the first (newest) result.
-snort3_extras_version_string=`curl https://api.github.com/repos/snort3/snort3_extra/tags | jq -r .[].name | grep -P "\d+\.\d+\.\d+\.\d+" | head -1`
-snort3_extras_tarball=`echo snort3_extra-$snort3_extras_version_string.tar.gz`
-snort3_extras_dirstring=`echo $snort3_extras_tarball | sed 's/.tar.gz//'`
+snort3_extras_version_string=`curl -fsSL https://api.github.com/repos/snort3/snort3_extra/tags | jq -r .[].name | grep -P "\d+\.\d+\.\d+\.\d+" | head -1`
+snort3_extras_tarball=snort3_extra-$snort3_extras_version_string.tar.gz
+snort3_extras_dirstring=snort3_extra-$snort3_extras_version_string
 snort3_extras_latest_url="https://github.com/snort3/snort3_extra/archive/refs/tags/$snort3_extras_version_string.tar.gz"
 
 #Added this in to account for instances where the snortrules tarball has not yet caught up with the current release of snort3 on snort.org.
