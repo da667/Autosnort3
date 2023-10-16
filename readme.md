@@ -8,7 +8,7 @@ This script is primarily for students attempting to build Snort for my book, Bui
 I'll get into the details of what this script does in a little bit.
 
 ## Supported Operating Systems
-As of right now, Autosnort3 is supported on Ubuntu 20.04 and 18.04. This script is 90% based on the work of Noah Dietrich, and his installation guide for Snort 3 on Ubuntu 18.04 *and* 20.04. A very special thank you and a link to Noah's work:
+As of right now, Autosnort3 is supported on Ubuntu 20.04 and above. This script is 90% based on the work of Noah Dietrich, and his installation guide for Snort 3 on Ubuntu 18.04 *and* 20.04. A very special thank you and a link to Noah's work:
 
 https://snort.org/documents/snort-3-1-17-0-on-ubuntu-18-20
 
@@ -23,12 +23,12 @@ https://snort.org/documents/snort-3-1-17-0-on-ubuntu-18-20
 
 These are the specs for the VM I used to test this script and build snort. As the name **Snort** implies, **this software is a hog**. And like with most software, the more resources it has available, the better it will perform. In particular, Snort 3 is multi-threaded now, so multiple CPU cores are *extremely* valuable.
 
-**OS Recommendations:** This script has been tested on Ubuntu 20.04 and 18.04. If you want to use another Debian-based distro, be my guest. *However* that is entirely unsupported and untested.
+**OS Recommendations:** This script has been tested on Ubuntu 20.04 and above. If you want to use another Debian-based distro, be my guest. *However* that is entirely unsupported and untested.
 
 **Other Recommendations:** 
 **This script *requires* an oinkcode to run.** If you don't know what that is, head to https://snort.org/users/sign_up and register an account. When you complete the registration process, log in and view your account information. That oinkcode needs to be copied to the `full_autosnort.conf` file
 
-**This script takes a significant period of time to run.** Hyperscan takes a long time to compile, as does snort 3 itself. If you're using the minimum system requirements, you'll need at least 45 minutes to 1.5 hours for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
+**This script takes a significant period of time to run.** Snort 3 takes a long time to compile. If your system/VM has multiple cores, it'll go a bit faster. If you're using the minimum system requirements, you'll need at least 30+ minutes for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
 
 **This script defaults to assuming you want to run Snort3 in inline mode.** If you don't want that, I'll show you how to undo that in a little bit.
 
@@ -37,11 +37,7 @@ Autosnort3 automates all of the following tasks:
  - Installs all of the prerequisites available from the Ubuntu repositories for both Snort3 as well as pulledpork, the recommended rule management software for Snort3.
  - Installs a whole bunch of prerequisites that Noah recommended compiling from source. Including:
 	 - libsafec
-	 - pcre
 	 - gperftools
-	 - ragel (specifically, version 6.10)
-	 - downloads and unpacks the C++ boost source (for use with hyperscan)
-	 - hyperscan (takes a **long** time to compile)
 	 - flatbuffers
 	 - libdaq
  - Installs Snort 3 (also takes a **long** time to compile)
@@ -165,6 +161,7 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	- Thanks to `@krishean@tech.lgbt`, I figured out how to use `jq` and the github API to pull the "latest" release version string via the github API for libdaq and snort3. Snort_extras was a little more work, but the bottom line is that the script is a lot less dependant on parsing raw HTML for pulling down the latest version of Snort3, libdaq, and snort_extras.
 		- we still have to parse the HTML to determine what rule tarballs to attempt to download via pulledpork.
 		- TODO: update to pulledpork3 (not yet completed)
+	- Updated the readme to reflect that we are no longer compiling hyperscan from source, and also to confirm we no longer support Ubuntu 18.04
  - 10/16/23
 	- Hey hey, Analysts. Its been a hot minute. 
 	- A couple of users reported problems with the script failing to pull down the Snort3 source tarball. Due to them changing the snort.org page ever-so-slightly once more. Of course, my ability to parse HTML is impeccable. I mean, its not like Cisco doesn't have the resources to make a snort3/latest.tar.gz URI or anything. No, that would wouldn't be helpful _at_ _all_.
