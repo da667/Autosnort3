@@ -161,6 +161,10 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 10/16/23 (again)
+	- Thanks to `@krishean@tech.lgbt`, I figured out how to use `jq` and the github API to pull the "latest" release version string via the github API for libdaq and snort3. Snort_extras was a little more work, but the bottom line is that the script is a lot less dependant on parsing raw HTML for pulling down the latest version of Snort3, libdaq, and snort_extras.
+		- we still have to parse the HTML to determine what rule tarballs to attempt to download via pulledpork.
+		- TODO: update to pulledpork3 (not yet completed)
  - 10/16/23
 	- Hey hey, Analysts. Its been a hot minute. 
 	- A couple of users reported problems with the script failing to pull down the Snort3 source tarball. Due to them changing the snort.org page ever-so-slightly once more. Of course, my ability to parse HTML is impeccable. I mean, its not like Cisco doesn't have the resources to make a snort3/latest.tar.gz URI or anything. No, that would wouldn't be helpful _at_ _all_.

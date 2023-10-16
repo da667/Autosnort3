@@ -183,29 +183,27 @@ gperftools_ver=`echo $gperftools_latest_url | cut -d"/" -f9 | sed 's/.tar.gz//'`
 flatbuffers_latest_url=`curl --silent "https://api.github.com/repos/google/flatbuffers/releases/latest" | jq -r .tarball_url`
 flatbuffers_latest_version=`echo $flatbuffers_latest_url | cut -d"/" -f8 | sed 's/v//'`
 
-#have to download snort.org/downloads and parse the HTML to pull the latest releases with rules available.
-#While there are newer releases of snort and libdaq on github, it turns out there are no rules for for newer releases on github.
-#This leads me to believe that they aren't actually intended for production use.
-#looking forward to being proven wrong, but not actually anticipating it.
+#Using a new method to pull the latest version of the snort3 and libdaq tarballs using the github api and jq to parse out the "latest" tag name. I'm not a programmer by trade, so thank you to @krishean@tech.lgbt for sharing this method. Unfortunately, we still have to pull the downloads page from snort.org to rectify what rule tarballs we should attempt to download.
 
 cd /tmp &>> $logfile
 wget https://www.snort.org/downloads &>> $logfile
 error_check 'Download of snort.org downloads page'
 
-snort3_version_tarball=`grep snort3- downloads | egrep -v "community|Snort" | cut -d ">" -f2 | cut -d"<" -f1`
-snort3_version_string=`echo $snort3_version_tarball | cut -d"-" -f2`
+snort3_version_string=`curl https://api.github.com/repos/snort3/snort3/releases/latest | jq -r .tag_name`
+snort3_version_tarball=`echo snort3-$snort3_version_string.tar.gz`
 snort3_dirstring=`echo $snort3_version_tarball | sed 's/.tar.gz//'`
-snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_version_string"
+snort3_latest_url="https://github.com/snort3/snort3/archive/refs/tags/$snort3_version_string.tar.gz"
 
-snort3_libdaq_tarball=`grep libdaq- downloads | cut -d">" -f2 | cut -d "<" -f1`
-snort3_libdaq_version_string=`echo $snort3_libdaq_tarball | cut -d"-" -f2`
+snort3_libdaq_version_string=`curl https://api.github.com/repos/snort3/libdaq/releases/latest | jq -r .tag_name`
+snort3_libdaq_tarball=`echo libdaq-$snort3_libdaq_version_string.tar.gz`
 snort3_libdaq_dirstring=`echo $snort3_libdaq_tarball | sed 's/.tar.gz//' | sed 's/v//'`
-snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/v$snort3_libdaq_version_string"
+snort3_libdaq_latest_url="https://github.com/snort3/libdaq/archive/refs/tags/$snort3_libdaq_version_string.tar.gz"
 
-snort3_extras_tarball=`grep snort3_extra downloads | cut -d">" -f2 | cut -d "<" -f1`
-snort3_extras_version_string=`echo $snort3_extras_tarball | cut -d"-" -f2`
+#curses to the snort3 team for failing to use releases on the snort3_extra repo. We have to do a little extra work here to pull releases with actual version strings in them (the grep with the PCRE is to ensure a 4-digit version string in the .name field is returned), then we assume that the API is going to show us the latest 4-digit version string first (at least it did when I tested it) and we use the head command to pull the first (newest) result.
+snort3_extras_version_string=`curl https://api.github.com/repos/snort3/snort3_extra/tags | jq -r .[].name | grep -P "\d+\.\d+\.\d+\.\d+" | head -1`
+snort3_extras_tarball=`echo snort3_extra-$snort3_extras_version_string.tar.gz`
 snort3_extras_dirstring=`echo $snort3_extras_tarball | sed 's/.tar.gz//'`
-snort3_extras_latest_url="https://github.com/snort3/snort3_extra/archive/refs/tags/$snort3_extras_version_string"
+snort3_extras_latest_url="https://github.com/snort3/snort3_extra/archive/refs/tags/$snort3_extras_version_string.tar.gz"
 
 #Added this in to account for instances where the snortrules tarball has not yet caught up with the current release of snort3 on snort.org.
 #grep for snortrules-snapshot-3 for snort3 rule tarballs. pull out just the 4-digit version string, then add periods (.) between each of the numbers.
@@ -330,13 +328,13 @@ error_check "Installation of libdaq-$snort3_libdaq_version_string"
 
 cd /usr/src &>> $logfile
 
-print_status "Downloading, compiling, and installing snort3-$snort3_version_string.."
+print_status "Downloading, compiling, and installing snort-$snort3_version_string.."
 
 retry 3 wget -O $snort3_version_tarball $snort3_latest_url &>> $logfile
-error_check "Download of snort3-$snort3_version_string"
+error_check "Download of snort-$snort3_version_string"
 
 tar -xzvf $snort3_version_tarball &>> $logfile
-error_check "Untar of $snort3_version_tarball"
+error_check "Untar of snort-$snort3_version_tarball"
 cd /usr/src/$snort3_dirstring
 
 ./configure_cmake.sh --prefix=/usr/local --enable-tcmalloc &>> $logfile
