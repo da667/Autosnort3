@@ -174,7 +174,7 @@ install_packages ${packages[@]}
 #this section involves a lot of html and json parsing from a couple of different websites in order to find the latest version of each software package
 #if the github api, the download pages, or the urls change, this script will likely break horribly. but that's a problem for future me.
 
-safec_latest_url=`curl --silent "https://api.github.com/repos/rurban/safeclib/releases/latest" | jq -r '.assets[3].browser_download_url'`
+safec_latest_url=`curl --silent "https://api.github.com/repos/rurban/safeclib/releases/latest" | jq -r '.assets[].browser_download_url' | egrep ".tar.bz2$"`
 safec_ver=`echo $safec_latest_url | cut -d"/" -f9 | sed -e 's/.tar.bz2//'`
 
 gperftools_latest_url=`curl --silent "https://api.github.com/repos/gperftools/gperftools/releases/latest" | jq -r '.assets[0].browser_download_url'`
@@ -230,9 +230,9 @@ error_check "Download of $safec_ver.tar.bz2"
 #and pass arguments to tar to dump everything into that directory, and strip everything down one top-level directory.
 
 dir_check $safec_ver
-tar -xjvf $safec_ver.tar.bz2 &>> $logfile
+tar -xjvf $safec_ver.tar.bz2 -C $safec_ver --strip-components=1 &>> $logfile
 error_check "Untar of $safec_ver.tar.bz2"
-cd /usr/src/$safec_ver &>> $logfile
+cd /usr/src/$safec_ver* &>> $logfile
 
 ./configure &>> $logfile
 error_check 'Configure safec libraries'
