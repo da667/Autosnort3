@@ -232,7 +232,7 @@ error_check "Download of $safec_ver.tar.bz2"
 dir_check $safec_ver
 tar -xjvf $safec_ver.tar.bz2 -C $safec_ver --strip-components=1 &>> $logfile
 error_check "Untar of $safec_ver.tar.bz2"
-cd /usr/src/$safec_ver* &>> $logfile
+cd /usr/src/$safec_ver &>> $logfile
 
 ./configure &>> $logfile
 error_check 'Configure safec libraries'
