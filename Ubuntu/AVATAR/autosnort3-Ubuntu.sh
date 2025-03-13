@@ -161,9 +161,9 @@ fi
 #Installing pre-requisites
 #We begin by installing the software packages and libraries available in the Ubuntu repos.
 
-print_status "Installing base packages: build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev libpcre3 libpcre3-dbg libpcre3-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libhyperscan-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq xz-utils.."
+print_status "Installing base packages: autoconf autotools-dev bison build-essential cmake cpputest ethtool flex git jq libcmocka-dev libboost-all-dev libcrypt-ssleay-perl libdumbnet-dev libhwloc-dev libluajit-5.1-dev liblwp-useragent-determined-perl liblzma-dev libmnl-dev libnetfilter-queue-dev libpcap-dev libpcre2-dev libpcre3 libpcre3-dbg libpcre3-dev libpcap-dev libsqlite3-dev libssl-dev libtool libunwind-dev openssl pkg-config ragel uuid-dev unzip xz-utils zlib1g-dev.."
 	
-declare -a packages=( build-essential autotools-dev libdumbnet-dev libluajit-5.1-dev libpcap-dev zlib1g-dev pkg-config libhwloc-dev unzip cmake liblzma-dev openssl libssl-dev libpcre3 libpcre3-dbg libpcre3-dev cpputest libsqlite3-dev libtool uuid-dev git autoconf bison flex libcmocka-dev libnetfilter-queue-dev libunwind-dev libhyperscan-dev libmnl-dev ethtool libcrypt-ssleay-perl liblwp-useragent-determined-perl jq xz-utils );
+declare -a packages=( autoconf autotools-dev bison build-essential cmake cpputest ethtool flex git jq libcmocka-dev libboost-all-dev libcrypt-ssleay-perl libdumbnet-dev libhwloc-dev libluajit-5.1-dev liblwp-useragent-determined-perl liblzma-dev libmnl-dev libnetfilter-queue-dev libpcap-dev libpcre2-dev libpcre3 libpcre3-dbg libpcre3-dev libpcap-dev libsqlite3-dev libssl-dev libtool libunwind-dev openssl pkg-config ragel uuid-dev unzip xz-utils zlib1g-dev );
 	
 install_packages ${packages[@]}
 
@@ -214,6 +214,34 @@ pp_s_flag=`grep snortrules-snapshot-3 downloads | cut -d"-" -f3 | cut -d"." -f1 
 rm -rf /tmp/downloads
 
 ########################################
+#installing vectorscan
+#vectorscan is the supported drop-in replacement for hyperscan, since Intel just kinda pulled the plug on the open-source version..
+
+print_status "Downloading, compiling, and install vectorscan.."
+
+cd /usr/src &>> $logfile
+
+#if the vectorscan library already exists, git clone fails. So we remove it, if it exists.
+if [ -d /usr/src/vectorscan ]; then
+	rm -rf /usr/src/vectorscan
+fi
+
+git clone https://github.com/VectorCamp/vectorscan &>> $logfile
+error_check "Download of vectorscan repo"
+
+cd /usr/src/vectorscan &>> $logfile
+dir_check vectorscan-build
+cd /usr/src/vectorscan/vectorscan-build &>> $logfile
+cmake ../ &>> $logfile
+error_check "CMake of vectorscan"
+
+make -j $(nproc) &>> $logfile
+error_check 'Make vectorscan'
+
+make install &>> $logfile
+error_check 'Installation of vectorscan'
+
+########################################
 #installing libsafec
 
 print_status "Downloading, compiling, and installing $safec_ver.."
@@ -237,7 +265,7 @@ cd /usr/src/$safec_ver &>> $logfile
 ./configure &>> $logfile
 error_check 'Configure safec libraries'
 
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check 'Make safec libraries'
 
 make install &>> $logfile
@@ -261,7 +289,7 @@ cd /usr/src/$gperftools_ver
 ./configure &>> $logfile
 error_check "Configure $gperftools_ver"
 
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check "Make $gperftools_ver"
 
 make install &>> $logfile
@@ -290,7 +318,7 @@ cd /usr/src/flatbuffers-$flatbuffers_latest_version/flatbuffers-build &>> $logfi
 cmake ../ &>> $logfile
 error_check "cmake of flatbuffers-$flatbuffers_latest_version"
 
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check "Make of flatbuffers-$flatbuffers_latest_version"
 
 make install &>> $logfile
@@ -317,7 +345,7 @@ error_check "Bootstrap of libdaq-$snort3_libdaq_version_string"
 ./configure &>> $logfile
 error_check "Configure libdaq-$snort3_libdaq_version_string"
 
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check "Make of libdaq-$snort3_libdaq_version_string"
 
 make install &>> $logfile
@@ -395,7 +423,7 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig &>> $logfile
 error_check "Configure snort3_extra-$snort3_extras_version_string"
 
 cd build &>> $logfile
-make &>> $logfile
+make -j $(nproc) &>> $logfile
 error_check "Make snort3_extra-$snort3_extras_version_string"
 
 make install &>> $logfile
@@ -449,39 +477,41 @@ fi
 
 cd /usr/src &>> $logfile
 
-print_status "Downloading and installing pulledpork rule manager.."
+print_status "Downloading and installing pulledpork3 rule manager.."
 
 #git clone refuses to download if the directory is already there and has files in it, so this check is to see if the directory is there, and nuke it.
-if [ -d /usr/src/pulledpork ]; then
-	rm -rf /usr/src/pulledpork
+if [ -d /usr/src/pulledpork3 ]; then
+	rm -rf /usr/src/pulledpork3
 fi
 
-git clone https://github.com/shirkdog/pulledpork &>> $logfile
-error_check 'Download of pulledpork'
-
-cp /usr/src/pulledpork/pulledpork.pl /usr/local/bin &>> $logfile
-error_check 'Copy of pulledpork.pl to /usr/local/bin'
-
+git clone https://github.com/shirkdog/pulledpork3 &>> $logfile
+error_check 'Download of pulledpork3'
 
 #Creating a bunch of files and directories that pulledpork wants to exist before it will run successfully.
 dir_check /usr/local/etc/lists
 dir_check /usr/local/etc/rules
 dir_check /usr/local/etc/so_rules
 dir_check /var/log/snort
-dir_check /usr/local/etc/pulledpork
+dir_check /usr/local/etc/pulledpork3
 
 touch /usr/local/etc/rules/snort.rules
 touch /usr/local/etc/rules/local.rules
 touch /usr/local/etc/lists/default.blocklist
+touch /usr/local/etc/pulledpork3/enablesid.conf
+touch /usr/local/etc/pulledpork3/disablesid.conf
+touch /usr/local/etc/pulledpork3/enablesid.conf
+touch /usr/local/etc/pulledpork3/dropsid.conf
+touch /usr/local/etc/pulledpork3/modifysid.conf
 
 
-#Originally, this was a mess of egrep and sed statements designed to pull apart the pulledpork.conf file
-#that ships with pulledpork into something much cleaner. Well, those days are gone.
-#Users should have a copy of pulledpork.conf from the github repo that is almost, but not quite production ready.
-#We make a copy of that pulledpork.conf, and using full_autosnort.conf, fill in the user's oinkcode to download snort rules
-#I also use the default pulledpork.conf that ships with the script to pull the current version of pulledpork for the version string.
-#Why? if the version of the config file does not match the version of pulledpork.pl, it flat-out refuses to run.
-#Note: this WILL overwrite /usr/local/etc/pulledpork/pulledpork.conf, if it exists.
+cp /usr/src/pulledpork3/pulledpork.py /usr/local/etc/pulledpork3/ &>> $logfile
+error_check 'Copy of pulledpork.py to /usr/local/etc/pulledpork3'
+cp -r /usr/src/pulledpork3/lib /usr/local/etc/pulledpork3
+error_check 'Copy of pulledpork lib directory to /usr/local/etc/pulledpork3'
+
+#Autosnort ships with an almost complete pulledpork.conf for pulledpork3. We use sed to add in the oinkcode
+#And grab the CONFIGURATION_NUMBER variable from the pulledpork.conf that ships with pulledpork3.
+#These values, along with the other configuration lines in pulledpork.conf are REQUIRED for pulledpork.py to work.
 
 cd "$execdir" &>> $logfile
 
@@ -492,52 +522,23 @@ else
 	print_good "Found $execdir/pulledpork.conf. Configuring.."
 	cp pulledpork.conf pulledpork.conf.tmp &>> $logfile
 	sed -i "s/<oinkcode>/$o_code/" pulledpork.conf.tmp &>> $logfile
-	grep "^version=" /usr/src/pulledpork/etc/pulledpork.conf >> pulledpork.conf.tmp
-	cp pulledpork.conf.tmp /usr/local/etc/pulledpork/pulledpork.conf &>> $logfile
-	error_check 'Copy pulledpork.conf to /usr/local/etc/pulledpork'
+	grep "^CONFIGURATION_NUMBER =" /usr/src/pulledpork/etc/pulledpork.conf >> pulledpork.conf.tmp
+	cp pulledpork.conf.tmp /usr/local/etc/pulledpork3/pulledpork.conf &>> $logfile
+	error_check 'Copy pulledpork.conf to /usr/local/etc/pulledpork3'
 fi
 
-#Move the disablesid, dropsid, enablesid, and modifysid.conf files to /usr/local/etc/pulledpork/ if they don't already exist
-if [ ! -f /usr/local/etc/pulledpork/disablesid.conf ]; then
-	cp /usr/src/pulledpork/etc/disablesid.conf /usr/local/etc/pulledpork &>> $logfile
-	error_check 'Copy disablesid.conf to /usr/local/etc/pulledpork/'
-fi
-
-if [ ! -f /usr/local/etc/pulledpork/dropsid.conf ]; then
-	cp /usr/src/pulledpork/etc/dropsid.conf /usr/local/etc/pulledpork &>> $logfile
-	error_check 'Copy dropsid.conf to /usr/local/etc/pulledpork/'
-fi
-
-if [ ! -f /usr/local/etc/pulledpork/modifysid.conf ]; then
-	cp /usr/src/pulledpork/etc/modifysid.conf /usr/local/etc/pulledpork &>> $logfile
-	error_check 'Copy modifysid.conf to /usr/local/etc/pulledpork/'
-fi
-
-if [ ! -f /usr/local/etc/pulledpork/enablesid.conf ]; then
-	cp /usr/src/pulledpork/etc/enablesid.conf /usr/local/etc/pulledpork &>> $logfile
-	error_check 'Copy enablesid.conf to /usr/local/etc/pulledpork/'
-fi
-
-print_status "Running pulledpork.pl.."
+print_status "Running pulledpork.py.."
 print_notification "This may take some time based on internet connection speed, etc."
 print_notification "If you notice this portion of the script appears to be hanging, check /var/log/autosnort3_install.log to confirm"
 print_notification "If the script CONTINUES to hang, consider checking network connectivity, including the http_proxy and https_proxy variables."
 
 #pulled pork options:
-#-W to work in proxied environments
 #-vv for extra verbose mode. I want logs in the autosnort3_install.log file if this command croaks
 #-c pointing to the config file we just copied/created in /usr/local/etc/pulledpork
-#-l log successes or failures to /var/log/syslog
-#-P force processing of rules, even if no new rules were downloaded
+#-i ignore warnings
 
-retry 3 pulledpork.pl -W -vv -c /usr/local/etc/pulledpork/pulledpork.conf -l -P &>> $logfile
-if [ $? -ne 0 ]; then
-	print_notification "Failed to download rules for snort-$snort3_version_string 3 times."
-	print_notification "Either Snort.org is having a really bad day (500 errors) or A rule tarball matching Snort3's current version is not yet present."
-	print_notification "Going to try 3 more times, setting the -S flag to $pp_s_flag.."
-	retry 3 pulledpork.pl -W -S $pp_s_flag -vv -c /usr/local/etc/pulledpork/pulledpork.conf -l -P &>> $logfile
-	error_check 'pulledpork.pl retry'
-fi
+retry 3 /usr/local/etc/pulledpork3/pulledpork.py -c /usr/local/etc/pulledpork3/pulledpork.conf -i -vv &>> $logfile
+error_check 'pulledpork.py rule download'
 	
 #If a crontab backup we've made already exists, restore it so we don't end up with duplicate crontab entries
 if [ -f /etc/crontab_bkup ]; then
@@ -557,7 +558,7 @@ error_check 'crontab backup'
 #bear in mind, for virtual labs students this script will absolutely fail without the http_proxy and/or https_proxy variables being set.
 print_status "Adding entry to /etc/crontab to run pulledpork Sunday at midnight (once weekly).."
 echo "#This line has been added by Autosnort to run pulledpork for the latest rule updates." >> /etc/crontab
-echo "  0  0  *  *  *  root /usr/local/bin/pulledpork.pl -W -c /usr/local/etc/pulledpork/pulledpork.conf -l -P -E" >> /etc/crontab
+echo "  0  0  *  *  *  root /usr/local/etc/pulledpork3/pulledpork.py -c /usr/local/etc/pulledpork3/pulledpork.conf -i -vv" >> /etc/crontab
 
 print_notification "crontab has been modified. If you want to modify when pulled pork runs to check rule updates, modify /etc/crontab."
 

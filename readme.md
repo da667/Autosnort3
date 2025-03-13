@@ -157,6 +157,16 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
 		
 ## Patch Notes
+ - 5/13/25
+    - User Praetorian saw fit to remind me that Autosnort3 has been broken for some time. Thank you for the reminder, and making me get off my ass to improve this script.
+	- Put the `apt-get` packages grabbed by this script in alphabetical order. Also added some pre-reqs to compile `vectorscan` libraries. More on this in a minute.
+	- Replaced the Intel Hyperscan package with a compiled-from-source copy of vectorscan. Why? well a couple of reasons. First off, [There was an issue I pushed to the Snort3 github] (https://github.com/snort3/snort3/issues/366) regarding some changes made to libhyperscan that caused it to not play nice with Snort. I was essentially told `not my yob, use a different pattern matching engine if you can't get it to work` by the Snort team, and found out that 1) Hyperscan is no longer open-source, nor is the open-source version supported 2) vectorscan is the drop-in replacement.
+	  - And so, here we are. We grab the prereqs, grab it from github, compile and install it.
+	- We're using pulledpork3 now. Why? Using the Talos Lightspd with PP3 allows us to automatically grab the correct SO rules for the version, OS, and arch Snort3 is running on. We don't have to avoid SO rules anymore. Or do insane safety dances to get the right SO rules for the right engine. It's a good day to die.
+	  - Don't get me wrong shared object rules still are absolutely awful.
+	- The cron job that tries to run pulledpork once a week, midnight on Sunday now tries to run pulledpork3 instead. I have no idea if this works. Good luck. If it's not working remove the entry from `/etc/crontab`.
+	- For those who insist on wanting to use the old perl-based pulledpork, I have a file `pulledpork.conf.pl.old` that you can use for reference purposes if you really want to. The new `pulledpork.conf` is formatted for use with pulledpork3.
+    - Speaking of SO rules, the `snort3.service` file has a second `plugin-path=` directive set to `/usr/local/etc/so_rules/` because for some reason, even after editing it, I couldn't get `snort_defaults.lua` to see the so_rules directory. I hate snort3 so much.	
  - 4/15/24
 	- Had some reports from users over the weekend that safeclib download/compile was failing. I think they changed the filename format for safeclib, and also the order in which the files are listed, and that resulted in jq parsing attempting to download the wrong file.
 	- Additionally, after I fixed that, the directory name was no longer correct because the tarball name and the directory name are different now, so now the script creates a directory and untars the file using the `-C` option to specify the directory the script creates, and `--strip-components=1` to ensure the files are exactly where the script expects it.
