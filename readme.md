@@ -55,6 +55,7 @@ Autosnort3 automates all of the following tasks:
  - Installs, configures and runs pulledpork3, a rule download and configuration management script with the following arguments:
 	 - `-vv` (high verbosity, logging all events to the `/var/log/autosnort3_install.log` file for debugging purposes)
 	 - `-c /usr/local/etc/pulledpork/pulledpork.conf` (location of the primary configuration script)
+	 - `-i` (ignore warnings. We don't stop for warnings. Crying is not an emergency)
 	   - The pulledpork.conf that ships with Autosnort3 sets the IDS policy to "security"
  - A cron job is configured to run `/usr/local/etc/pulledpork3/pulledpork.py` daily at midnight
  - Configures the service `snort3.service` that performs the following tasks
