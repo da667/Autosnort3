@@ -28,7 +28,7 @@ These are the specs for the VM I used to test this script and build snort. As th
 **Other Recommendations:** 
 **This script *requires* an oinkcode to run.** If you don't know what that is, head to https://snort.org/users/sign_up and register an account. When you complete the registration process, log in and view your account information. That oinkcode needs to be copied to the `full_autosnort.conf` file
 
-**This script takes a significant period of time to run.** Snort 3 takes a long time to compile. If your system/VM has multiple cores, it'll go a bit faster. If you're using the minimum system requirements, you'll need at least 30+ minutes for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
+**This script takes a significant period of time to run.** Snort 3 (and its prereqs) takes a long time to compile. If your system/VM has multiple cores, it'll go a bit faster. If you're using the minimum system requirements, you'll need at least 30+ minutes for it to compile and configure everything. That's also assuming a moderately decent internet connection required to download everything.
 
 **This script defaults to assuming you want to run Snort3 in inline mode.** If you don't want that, I'll show you how to undo that in a little bit.
 
@@ -40,6 +40,7 @@ Autosnort3 automates all of the following tasks:
 	 - gperftools
 	 - flatbuffers
 	 - libdaq
+ - Installs vectorscan, a drop-in replacement for hyperscan, a fast and powerful rule search method.
  - Installs Snort 3 (also takes a **long** time to compile)
 	- Also installs the OpenAppID detectors, and OpenAppID listener plugin (via Snort3 extras)
 	- Creates the `snort` system user and group in order for the snort process to drop its privileges after startup
@@ -51,14 +52,11 @@ Autosnort3 automates all of the following tasks:
 	 - Enables JSON logging for snort alerts (logs to: `/var/log/snort/alert_json.txt`, configured to rollover after 1GB)
 	 - Enables JSON logging for the OpenAppID listener (logs to: `/var/log/snort/appid-output.log`)
 	 - Configures the DAQ for inline mode operation, using the interface names defined in the `full_autosnort.conf` file
- - Installs, configures and runs pulledpork, a rule download and configuration management script with the following arguments:
-	 - `-W` (this option is used to work around strange bugs where LWP doesn't appear to honor the http_proxy and https_proxy variables)
+ - Installs, configures and runs pulledpork3, a rule download and configuration management script with the following arguments:
 	 - `-vv` (high verbosity, logging all events to the `/var/log/autosnort3_install.log` file for debugging purposes)
 	 - `-c /usr/local/etc/pulledpork/pulledpork.conf` (location of the primary configuration script)
-		 - The pulledpork.conf that ships with Autosnort3 sets the IDS policy to "security"
-	- `-l` (log major successes or failures to syslog)
-	- `-P` (process rules even if no new rules were downloaded)
- - A cron job is configured to run `pulledpork.pl` daily at midnight with all of the arguments above, except for `-vv`
+	   - The pulledpork.conf that ships with Autosnort3 sets the IDS policy to "security"
+ - A cron job is configured to run `/usr/local/etc/pulledpork3/pulledpork.py` daily at midnight
  - Configures the service `snort3.service` that performs the following tasks
 	 - Enables service persistence for snort3, and will also try to re-start the service if the snort process dies, and retries every 60 seconds
 	 - runs `ethtool` on service startup against both network interfaces defined in `full_autosnort.conf` to disable both the LRO and GRO settings
@@ -76,6 +74,7 @@ Autosnort3 automates all of the following tasks:
 		 - `-m 0x1b` (create files with a `umask` of `033 (rw-r--r--)`)
 		 - `--create-pidfile` (creates a pid file for service management in `/var/log/snort` named `snort.pid`)
 		 - `--plugin-path=/usr/local/lib/snort_extra` (specifies the directory where additional custom snort3 plugins can be found such as the appid_listener plugin)
+		 - `--plugin-path=/usr/local/etc/so_rules` (specifies where to find the shared object rules, which snort3 views as "plugins"
 		 - `-s 65535` (sets the maximum ethernet frame length to the theoretical max of 65,535 to ensure that snort does not discard oversized frames.)
 		 - `-k none` (do not drop packets with bad checksums)
 		 - `-Q` (changes the DAQ operating mode from passive to inline, in addition to all of the custom DAQ configurations made in `virtual_labs_tweaks.lua`)
@@ -164,9 +163,11 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	  - And so, here we are. We grab the prereqs, grab it from github, compile and install it.
 	- We're using pulledpork3 now. Why? Using the Talos Lightspd with PP3 allows us to automatically grab the correct SO rules for the version, OS, and arch Snort3 is running on. We don't have to avoid SO rules anymore. Or do insane safety dances to get the right SO rules for the right engine. It's a good day to die.
 	  - Don't get me wrong shared object rules still are absolutely awful.
-	- The cron job that tries to run pulledpork once a week, midnight on Sunday now tries to run pulledpork3 instead. I have no idea if this works. Good luck. If it's not working remove the entry from `/etc/crontab`.
+	- The cron job that tries to run pulledpork daily now tries to run pulledpork3 instead. I have no idea if this works. Good luck. If it's not working remove the entry from `/etc/crontab`.
 	- For those who insist on wanting to use the old perl-based pulledpork, I have a file `pulledpork.conf.pl.old` that you can use for reference purposes if you really want to. The new `pulledpork.conf` is formatted for use with pulledpork3.
-    - Speaking of SO rules, the `snort3.service` file has a second `plugin-path=` directive set to `/usr/local/etc/so_rules/` because for some reason, even after editing it, I couldn't get `snort_defaults.lua` to see the so_rules directory. I hate snort3 so much.	
+    - Speaking of SO rules, the `snort3.service` file has a second `plugin-path=` directive set to `/usr/local/etc/so_rules/` because for some reason, even after editing it, I couldn't get `snort_defaults.lua` to see the so_rules directory. I hate snort3 so much.
+	- replaced most `make` compile statements to `make -j $(nproc).` 
+	  - `We multithreaded now.`and in less time than it took Snort3 to release.
  - 4/15/24
 	- Had some reports from users over the weekend that safeclib download/compile was failing. I think they changed the filename format for safeclib, and also the order in which the files are listed, and that resulted in jq parsing attempting to download the wrong file.
 	- Additionally, after I fixed that, the directory name was no longer correct because the tarball name and the directory name are different now, so now the script creates a directory and untars the file using the `-C` option to specify the directory the script creates, and `--strip-components=1` to ensure the files are exactly where the script expects it.
