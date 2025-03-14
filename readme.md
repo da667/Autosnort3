@@ -155,7 +155,17 @@ A big thanks to Noah for all of his hard work documenting the installation proce
 	- According to an old github issue, they tried to blame this on the user inputting an invalid oinkcode into the `pulledpork.conf` file, but I've experienced this problem with a perfectly valid oinkcode. Personally, I think the 422 errorcode also masks a 500 code on the server-side. The snortrules-snapshots are hosted on amazon via snort.org, just like the libdaq and snort3 tarballs.
 		- My recommendation is to check `full_autosnort.conf` and confirm that you've entered a valid oinkcode on line 32. As of mine writing this, oinkcodes are 40 character alphanumeric strings, so line 32 should read: `o_code=[40-character oinkcode here]`
 		- If you've confirmed that your oinkcode is valid, my only other recommendation is to re-run the script.
-		
+ - If you're trying to run Snort3 in AFPACKET bridging mode on Proxmox, and you notice the bridge is only carrying ICMP and/or ARP requests, and devices are NOT communicating across the bridge, Be aware of the following:
+  - As of right now, if your Snort3 VM (or Suricata for that matter) are using the virtio network cards, there are compatibility problems with virtio, promisc mode and AFPACKET bridging. There is no bug documented for this for Snort, but there is a Suricata bug... that is a few years old now: https://redmine.openinfosecfoundation.org/issues/5871
+  - Switch to E1000, E1000E, RTL8139, or VMXNET3 driver for the NICs that will be in AFPACKET bridging mode **on your snort3/suricata VM**.
+   - Yes, this is going to impact your throughput. In my testing, Max speed for E1000, E1000E and VMXNET3 are 1gbps. RTL8139 is 10/100Mbps only, according to the docs. I wouldn't use that if I were you.
+   - You may need to set promisc mode on the bridge interfaces **on the proxmox console**:
+     - `ip link set vmbr* promisc on`, replacing `vmbr*` with the names of the bridge interfaces the snort3/suricata VM are bridging. You'll need to run this command once for each bridge interface.
+   - If things are still not working, several guides recommend running running these brctl commands **on the proxmox console**:
+	- `brctl setageing vmbr* 0`
+	- `brctl setfd vmbr* 0`
+	- Again, these commands need to be for each proxmox Linux bridge your are attempting to bridge via Snort3/Suricata. Replace `vmbr*` with the names of the linux bridge interfaces that Snort3/Suricata are trying to bridge.
+  - These config changes may not persist between reboots of proxmox. Look into editing `/etc/network/interfaces` to make them permanent.
 ## Patch Notes
  - 5/13/25
     - User Praetorian saw fit to remind me that Autosnort3 has been broken for some time. Thank you for the reminder, and making me get off my ass to improve this script.
